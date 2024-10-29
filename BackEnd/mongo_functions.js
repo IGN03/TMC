@@ -328,7 +328,7 @@ async function ActivatePickupLocation(filter){
 app.post('/activateLocation', async (req, res) => {
     try {
         if(!req.body._id){
-            res.error(400).json({error: 'Missing _id field'})
+            res.status(400).json({error: 'Missing _id field'})
         } else {
             const idToActivate = {_id : new ObjectId(req.body._id)} 
             const pickupLocation = await ActivatePickupLocation(idToActivate);
@@ -341,6 +341,58 @@ app.post('/activateLocation', async (req, res) => {
     }
 });
 
+
+async function getMenuItemsFromCart( cart ){
+    let items = []
+    for (let i = 0; i < cart.length; i++) { 
+        let query = {_id : new ObjectId(cart[i])}
+        let foundMenuItems = await getAllMenuItems(query);
+        items.push(foundMenuItems[0])
+    }
+    return items
+}
+
+app.post('/orderFromCart', async(req, res) => {
+    // Take in an account id so we can grab the cart
+    const query = req.query
+    const body = req.body
+    try {
+        if (!query._id ||  !body.pickupLocation || !body.tip){
+            res.status(400).json({error: 'Missing required fields field'})
+        }
+        else{
+            // get the cart from the account
+            query._id = new ObjectId(query._id)
+            const foundAccount = await getAccounts(query);
+            cart = foundAccount[0].cart
+            // calculte the total cost of the items
+            let foundMenuItems = await getMenuItemsFromCart(cart)
+            let cost = 0
+            for (let i = 0; i < foundMenuItems.length; i++) { 
+                cost += foundMenuItems[i].price
+            }
+            // create the order
+            const now = new Date();
+            let order = {
+                accountId: query._id,
+                items: cart,
+                orderTime: now.toString(),
+                pickupLocation: body.pickupLocation,
+                costOfItems: cost,
+                tip: body.tip,
+                completed: null
+            }
+            let newOrder = new Order(order)
+            const orderId = await postOrder(newOrder);
+            res.status(201).json({ message: 'order added successfully', orderId });
+            return orderId
+        }
+    } catch (error){
+        console.log("ERROR: " + error)
+        res.status(500).json({ error: 'Failed to create order' });
+    }
+
+})
 
 app.listen(3000, () => {
     console.log('Server is running on port 3000');
