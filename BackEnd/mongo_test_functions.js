@@ -283,7 +283,6 @@ async function testPostPickupLocaion(){
     assert.strictEqual(result.message, 'pickup location successfully created');
     const insertedId = result.pickupLocation;
     result = await fetchData(BASE_URL + '/pickupLocations?_id='+ insertedId)
-    console.log(result)
     assert.strictEqual(result.foundPickupLocations[0]._id, insertedId )
 }
 
@@ -327,7 +326,7 @@ async function testUpdatePickupLocation(){
     assert.strictEqual(result.foundPickupLocations[0].address, updateItem.address)
     assert.strictEqual(result.foundPickupLocations[0].contactInfo, updateItem.contactInfo)
     assert.strictEqual(result.foundPickupLocations[0].name, updateItem.name)
-    assert.strictEqual(result.foundPickupLocations[0].active, false)
+    assert.strictEqual(result.foundPickupLocations[0].active, true)
 }
 
 
@@ -360,6 +359,66 @@ async function testActivateLocation(){
     assert.strictEqual(result.foundPickupLocations[0].active, true )
 }
 
+
+// add 3 menu Items and return thier Ids
+async function fillMenuItems(){
+    let menuIds = []
+    let menuUrl = BASE_URL + '/menuItem';
+    let body = [
+        {
+            name: 'Test Burger',
+            price: 9.99,
+            description: 'Delicious burger',
+            category: 'Food'
+        },
+        {
+            name: 'Test Curry',
+            price: 25,
+            description: 'Delicious Curry',
+            category: 'Curry'
+        },
+        {
+            name: 'Test Waffle',
+            price: 25,
+            description: 'Delicious Waffle',
+            category: 'Waffle'
+        }
+    ];
+    for (let i = 0; i< body.length; i++){
+        let result = await postData(menuUrl, body[i]);
+        menuIds.push(result.menuItem)
+    }
+    return menuIds
+}
+
+
+async function testOrderFromCart(){
+    //setup the account
+    let menuIds = await fillMenuItems()
+    let accountUrl = BASE_URL + '/account';
+    const body = {  
+        name : "the tester",
+        email : "theTester@test.com",
+        password : "12345",
+        phone : "122-333-4444",
+        accessLevel : 1, 
+        cart : menuIds
+    };
+    let result = await postData(accountUrl, body);
+    let accountId = result.account;
+    //Create the order
+    let orderFromCartUrl = BASE_URL + '/orderFromCart?_id=' + accountId
+    result = await postData(orderFromCartUrl, {pickupLocation: '1', tip: 1.2})
+    result = await fetchData(BASE_URL + '/orders?_id='+ result.orderId)
+    assert.strictEqual(result.foundOrders[0].costOfItems, 59.99 )
+    assert.strictEqual(result.foundOrders[0].tip, 1.2 )
+    assert.strictEqual(result.foundOrders[0].items.length, menuIds.length )
+    assert.strictEqual(result.foundOrders[0].items[0], menuIds[0] )
+    assert.strictEqual(result.foundOrders[0].items[1], menuIds[1] )
+    assert.strictEqual(result.foundOrders[0].items[2], menuIds[2] )
+
+}
+
 async function clearTestDB(){
     const uri = process.env.ATLAS_URI
 
@@ -387,171 +446,27 @@ async function clearTestDB(){
 async function runTests(){
     // We only want to run the tests on the test database 
     assert.strictEqual(process.env.DATABASE, TEST_DB)
-    //await testPostMenuItem()
-    //await testPostEmptyMenuItem()
-    //await testPostIncompleteMenuItem()
-    //await testUpdateMenuItem()
-    //await testPostOrder()
-    //await testPostEmptyOrder()
-    //await testPostIncompleteOrder()
-    //await testUpdateOrder()
-    //await testPostAccount()
-    //await testPostEmptyAccount()
-    //await testPostIncompleteAccount()
-    //await testUpdateAccount()
-    //await testPostPickupLocaion()
-    //await testPostEmptyPickupLocation()
-    //await testPostIncompletePickupLocation()
-    //await testUpdatePickupLocation()
+    
+    await testPostMenuItem()
+    await testPostEmptyMenuItem()
+    await testPostIncompleteMenuItem()
+    await testUpdateMenuItem()
+    await testPostOrder()
+    await testPostEmptyOrder()
+    await testPostIncompleteOrder()
+    await testUpdateOrder()
+    await testPostAccount()
+    await testPostEmptyAccount()
+    await testPostIncompleteAccount()
+    await testUpdateAccount()
+    await testPostPickupLocaion()
+    await testPostEmptyPickupLocation()
+    await testPostIncompletePickupLocation()
+    await testUpdatePickupLocation()
     await testActivateLocation()
-    //await clearTestDB()
+    await testOrderFromCart()
     console.log("all tests passed")
+    //await clearTestDB()
 }
 
 runTests();
-/*
-const randomString = () => Math.random().toString(36).substring(7);
-
-describe('API Testing with Axios', () => {
-
-    // Test MenuItem Endpoints
-    describe('POST /menuItem', () => {
-
-        it('should add a valid menu item', async () => {
-            const menuItem = {
-                name: 'Test Burger',
-                price: 9.99,
-                description: 'Delicious burger',
-                category: 'Food'
-            };
-            const response = await axios.post(`${BASE_URL}/menuItem`, menuItem);
-            expect(response.status).toBe(201);
-            expect(response.data.message).toBe('Menu item added successfully');
-        });
-
-        it('should fail to add a menu item with missing fields', async () => {
-            const menuItem = {
-                price: 9.99
-            };
-            try {
-                await axios.post(`${BASE_URL}/menuItem`, menuItem);
-            } catch (error) {
-                expect(error.response.status).toBe(400);
-                expect(error.response.data.error).toBe('Required fields are missing');
-            }
-        });
-
-        it('should get all menu items', async () => {
-            const response = await axios.get(`${BASE_URL}/menuItems`);
-            expect(response.status).toBe(201);
-            expect(response.data.message).toBe('Menu items grabbed');
-            expect(Array.isArray(response.data.allMenuItems)).toBe(true);
-        });
-    });
-
-    // Test Order Endpoints
-    describe('POST /order', () => {
-
-        it('should add a valid order', async () => {
-            const order = {
-                menuItemIds: ['menuItem1', 'menuItem2'],
-                accountId: 'testAccount1',
-                pickupLocationId: 'testLocation1'
-            };
-            const response = await axios.post(`${BASE_URL}/order`, order);
-            expect(response.status).toBe(201);
-            expect(response.data.message).toBe('order added successfully');
-        });
-
-        it('should fail to add an order with missing required fields', async () => {
-            const order = {
-                accountId: 'testAccount1'
-            };
-            try {
-                await axios.post(`${BASE_URL}/order`, order);
-            } catch (error) {
-                expect(error.response.status).toBe(400);
-                expect(error.response.data.error).toBe('missing required fields');
-            }
-        });
-
-        it('should get all orders', async () => {
-            const response = await axios.get(`${BASE_URL}/orders`);
-            expect(response.status).toBe(201);
-            expect(response.data.message).toBe('orders grabbed');
-            expect(Array.isArray(response.data.allOrders)).toBe(true);
-        });
-    });
-
-    // Test Account Endpoints
-    describe('POST /account', () => {
-
-        it('should create a valid account', async () => {
-            const account = {
-                username: randomString(),
-                password: 'testpassword',
-                email: `${randomString()}@test.com`
-            };
-            const response = await axios.post(`${BASE_URL}/account`, account);
-            expect(response.status).toBe(201);
-            expect(response.data.message).toBe('account successfully created');
-        });
-
-        it('should fail to create an account with missing fields', async () => {
-            const account = {
-                username: randomString()
-            };
-            try {
-                await axios.post(`${BASE_URL}/account`, account);
-            } catch (error) {
-                expect(error.response.status).toBe(400);
-                expect(error.response.data.error).toBe('missing required fields');
-            }
-        });
-
-        it('should get all accounts', async () => {
-            const response = await axios.get(`${BASE_URL}/accounts`);
-            expect(response.status).toBe(201);
-            expect(response.data.message).toBe('accounts grabbed');
-            expect(Array.isArray(response.data.allAccounts)).toBe(true);
-        });
-    });
-
-    // Test Pickup Location Endpoints
-    describe('POST /pickupLocation', () => {
-
-        it('should create a valid pickup location', async () => {
-            const pickupLocation = {
-                name: 'Location 1',
-                address: '1234 Test St',
-                city: 'Testville',
-                state: 'TX',
-                zip: '12345'
-            };
-            const response = await axios.post(`${BASE_URL}/pickupLocation`, pickupLocation);
-            expect(response.status).toBe(201);
-            expect(response.data.message).toBe('pickup location successfully created');
-        });
-
-        it('should fail to create a pickup location with missing fields', async () => {
-            const pickupLocation = {
-                name: 'Location 2'
-            };
-            try {
-                await axios.post(`${BASE_URL}/pickupLocation`, pickupLocation);
-            } catch (error) {
-                expect(error.response.status).toBe(400);
-                expect(error.response.data.error).toBe('missing required fields');
-            }
-        });
-
-        it('should get all pickup locations', async () => {
-            const response = await axios.get(`${BASE_URL}/pickupLocations`);
-            expect(response.status).toBe(201);
-            expect(response.data.message).toBe('pickup locations grabbed');
-            expect(Array.isArray(response.data.allPickupLocations)).toBe(true);
-        });
-    });
-
-});
-*/
