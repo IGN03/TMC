@@ -1,33 +1,40 @@
 //import { MenuItem, Order, Account, PickupLocation } from './models.js';
 const { MenuItem, Order, Account, PickupLocation } = require("./models.js")
 const { MongoClient, ServerApiVersion, ObjectId  } = require("mongodb");
-
+const cors = require('cors');
 require('dotenv').config();
+const express = require('express');
 
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
 // TODO set up secrets for connection string
 
 const uri = process.env.ATLAS_URI
 
-const client = new MongoClient(uri,  {
+const client = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
         strict: true,
         deprecationErrors: true,
     }
+});
+
+// Database setup
+const database = process.env.DATABASE;
+if (!database) {
+    console.error('DATABASE environment variable is not set');
+    process.exit(1);
 }
-);
 
 // get to mongo connection
-const database = process.env.DATABASE
 const myDB = client.db(database);
 const menuItems = myDB.collection("menuItems");
 const orders = myDB.collection("orders");
 const accounts = myDB.collection("accounts");
 const pickupLocations = myDB.collection("pickupLocations");
-
-const express = require('express');
-const app = express();
-app.use(express.json());
 
 async function postMenuItem(newMenuItem){
     const result = await menuItems.insertOne(newMenuItem.getPostDict());
