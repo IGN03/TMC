@@ -493,7 +493,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFA726',
     alignItems: 'center',
   },
-
   // For Sidebar
   overlay: {
     flex: 1,
