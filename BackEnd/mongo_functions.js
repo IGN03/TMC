@@ -238,8 +238,22 @@ app.get('/accounts', async (req, res) => {
     }
 });
 
+function isValidCart(cart){
+    for (let i = 0; i < cart.length; i++) { 
+        if(!cart[i]._id || !cart[i].name || !cart[i].price){
+            return false
+        }
+    }
+    return true
+
+}
 
 app.put('/account', async (req, res) => {
+    // Check the cart to make sure it contains the info we want
+    if(req.body.cart && !isValidCart(req.body.cart)){
+        res.status(400).json({ error: 'The cart is invalid: it must contain and _id, name and price' });
+        return
+    }
     const updateDoc  = {$set: req.body};
     const query = req.query
 
