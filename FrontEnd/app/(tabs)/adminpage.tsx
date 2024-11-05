@@ -1,134 +1,197 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, FlatList, Alert, Modal, StyleSheet, useColorScheme } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Button, FlatList, TextInput, StyleSheet } from 'react-native';
+import axios from 'axios';
 
-// Example menu data
-const initialMenuItems = [
-  { id: '1', name: 'Burger', price: '5.99' },
-  { id: '2', name: 'Pizza', price: '8.99' },
-  { id: '3', name: 'Pasta', price: '7.99' },
-];
+interface MenuItem {
+  _id: string;
+  name: string;
+  price: GLfloat;
+  allergen: string;
+  description: string;
+}
+
+interface MenuItemFormData {
+  name: string;
+  price: GLfloat;
+  allergen: string;
+  description: string;
+}
 
 const AdminPage = () => {
-  const [menuItems, setMenuItems] = useState(initialMenuItems); // Menu items state
-  const [modalVisible, setModalVisible] = useState(false); // Modal visibility state
-  const [currentItem, setCurrentItem] = useState(null); // Current item being edited
-  const [newName, setNewName] = useState('');
-  const [newPrice, setNewPrice] = useState('');
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [newMenuItem, setNewMenuItem] = useState<MenuItemFormData>({ 
+    name: '', 
+    price: 0, 
+    allergen: '',
+    description: '' 
+  });
+  const [editMode, setEditMode] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
 
-//   // Handle opening the edit modal
-//   const openEditModal = (item) => {
-//     setCurrentItem(item);
-//     setNewName(item.name);
-//     setNewPrice(item.price);
-//     setModalVisible(true);
-//   };
+  const BACKEND_URL = 'http://localhost:3000';
 
-  // Handle saving the menu item
-  const saveMenuItem = () => {
-    if (!newName || !newPrice) {
-      Alert.alert('Error', 'Please provide both name and price.');
-      return;
+  useEffect(() => {
+    fetchMenuItems();
+  }, []);
+
+  const fetchMenuItems = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/menuItems`);
+      // Fix: Access the foundMenuItems array from the response structure
+      setMenuItems(response.data.foundMenuItems);
+    } catch (error) {
+      console.error('Error fetching menu items:', error);
     }
-
-    // // Update the menu items
-    // const updatedItems = menuItems.map((item) =>
-    //   item.id === currentItem.id ? { ...item, name: newName, price: newPrice } : item
-    // );
-    // setMenuItems(updatedItems);
-    // setModalVisible(false);
   };
 
+  const handleSubmit = async () => {
+    const method = editMode ? 'PUT' : 'POST';
+    const url = editMode 
+      ? `${BACKEND_URL}/menuItem?_id=${selectedItem?._id}` 
+      : `${BACKEND_URL}/menuItem`;
+
+    try {
+      const payload = {
+        name: newMenuItem.name,
+        price: newMenuItem.price,
+        allergen: newMenuItem.allergen,
+        description: newMenuItem.description,
+      };
+
+      if (method === 'PUT') {
+        await axios.put(url, payload);
+      } else {
+        await axios.post(url, payload);
+      }
+
+      fetchMenuItems();
+      resetForm();
+    } catch (error) {
+      console.error('Error creating/updating menu item:', error);
+    }
+  };
+
+  const resetForm = () => {
+    setNewMenuItem({ name: '', price: 0, allergen: '', description: '' });
+    setEditMode(false);
+    setSelectedItem(null);
+  };
+
+  const selectItemForEditing = (item: MenuItem) => {
+    setEditMode(true);
+    setSelectedItem(item);
+    setNewMenuItem({ 
+      name: item.name, 
+      price: item.price, 
+      allergen: item.allergen,
+      description: item.description 
+    });
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Admin Panel</Text>
+      <Text style={styles.header}>Admin Page</Text>
+      
+      {/* Form for creating/editing menu items */}
+      <View style={styles.form}>
+        <TextInput
+          style={styles.input}
+          placeholder="Name"
+          value={newMenuItem.name}
+          onChangeText={(text) => setNewMenuItem({...newMenuItem, name: text})}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Price"
+          value={newMenuItem.price ? String(newMenuItem.price) : ''}
+          onChangeText={(text) => setNewMenuItem({...newMenuItem, price: parseFloat(text) || 0})}
+          keyboardType="decimal-pad"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Allergen"
+          value={newMenuItem.allergen}
+          onChangeText={(text) => setNewMenuItem({...newMenuItem, allergen: text})}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Description"
+          value={newMenuItem.description}
+          onChangeText={(text) => setNewMenuItem({...newMenuItem, description: text})}
+          multiline
+        />
+        <Button
+          title={editMode ? "Update Item" : "Add Item"}
+          onPress={handleSubmit}
+        />
+        {editMode && (
+          <Button
+            title="Cancel"
+            onPress={resetForm}
+            color="red"
+          />
+        )}
+      </View>
 
-      {/* <FlatList
+      <FlatList
         data={menuItems}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
           <View style={styles.menuItem}>
-            <Text>{item.name} - ${item.price}</Text>
-            <Button title="Edit" onPress={() => openEditModal(item)} />
+            <Text style={styles.itemName}>{item.name} - ${item.price.toFixed(2)}</Text>
+            <Text style={styles.itemDescription}>{item.description}</Text>
+            <Button
+              title="Edit"
+              onPress={() => selectItemForEditing(item)}
+            />
           </View>
         )}
-      /> */}
-
-      {/* Modal for editing a menu item
-      <Modal visible={modalVisible} transparent={true} animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Menu Item</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Item Name"
-              value={newName}
-              onChangeText={setNewName}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Item Price"
-              value={newPrice}
-              keyboardType="numeric"
-              onChangeText={setNewPrice}
-            />
-            <Button title="Save" onPress={saveMenuItem} />
-            <Button title="Cancel" onPress={() => setModalVisible(false)} />
-          </View>
-        </View> */}
-      {/* </Modal> */}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    flex: 1,
   },
-  title: {
+  header: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
   },
   menuItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderColor: '#ddd',
-    width: '100%',
+    padding: 10,
+    marginVertical: 5,
+    backgroundColor: '#f1f1f1',
+    borderRadius: 5,
+  },
+  itemName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  itemDescription: {
+    marginTop: 5,
+    color: '#666',
+  },
+  form: {
+    marginVertical: 20,
+    padding: 15,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   input: {
-    height: 50,
-    borderColor: '#ccc',
     borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    marginBottom: 15,
-    width: '100%',
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    padding: 20,
-    backgroundColor: 'white',
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    borderColor: '#ddd',
+    borderRadius: 4,
+    padding: 8,
+    marginVertical: 5,
   },
 });
 
