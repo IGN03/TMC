@@ -1,5 +1,5 @@
 name: Lint
-
+run-name: ${{github.actor}} is running the linter
 on:
   push:
     branches:
