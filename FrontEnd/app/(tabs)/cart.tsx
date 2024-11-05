@@ -1,218 +1,415 @@
 import React, { useState, useEffect } from 'react';
-import { Image, StyleSheet, Modal, View, Text, Button } from 'react-native';
+import { 
+  Image, 
+  StyleSheet, 
+  Modal, 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  Button,
+  Platform 
+} from 'react-native';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
-
-export default function CartScreen() {
- const [isCartModalVisible, setCartModalVisible] = useState(false);
- const [isNewModalVisible, setIsNewModalVisible] = useState(false); // New modal state
- const [cart, setCart] = useState([]);  // Array holding cart items
- const isFocused = useIsFocused();
- const navigation = useNavigation();
-
-
-
- // Check if the cart is empty
- const isCartEmpty = cart.length === 0;
-
-
- // Effect to show the modal when the Cart tab is focused and cart is empty
- useEffect(() => {
-   if (isFocused && isCartEmpty) {
-     setCartModalVisible(true);  // Show modal when Cart tab is focused and cart is empty
-   } else {
-     setCartModalVisible(false);  // Hide modal if cart has items
-   }
- }, [isFocused, isCartEmpty]);
-
-
- const closeModal = () => {
-   setCartModalVisible(false);  // Close the modal
- };
-
-
- const closeModalAndNavigate = () => {
-   setCartModalVisible(false);  // Close the modal
-   navigation.navigate('explore');  // Navigate to Menu screen
- };
-
-
- const openNewModal = () => {
-   setCartModalVisible(false); // Close current modal
-   setIsNewModalVisible(true); // Open new modal
- };
-
-
- const closeNewModal = () => {
-   setIsNewModalVisible(false); // Close new modal
- };
-
- const backToOrderSummary = () => {
-  setIsNewModalVisible(false);  // Close the current modal
-  setCartModalVisible(true);  // Open the cart modal
+// Custom PaymentButton component
+const PaymentButton = ({ 
+  onPress, 
+  logo, 
+  style, 
+  label,
+  testID 
+}) => {
+  return (
+    <TouchableOpacity 
+      onPress={onPress}
+      style={[styles.paymentButton, style]}
+      activeOpacity={0.7}
+      testID={testID}
+    >
+      <Image 
+        source={logo} 
+        style={styles.paymentLogo}
+        resizeMode="contain"
+      />
+      {label && <Text style={styles.paymentButtonText}>{label}</Text>}
+    </TouchableOpacity>
+  );
 };
 
+export default function CartScreen() {
+  const [isCartModalVisible, setCartModalVisible] = useState(false);
+  const [isNewModalVisible, setIsNewModalVisible] = useState(false);
+  const [isPaymentMethodModalVisible, setIsPaymentMethodModalVisible] = useState(false);
+  const [isPaymentConfirmationModalVisible, setIsPaymentConfirmationModalVisible] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
+  const [cart, setCart] = useState([]);
+  const isFocused = useIsFocused();
+  const navigation = useNavigation();
 
- return (
-   <ThemedView style={{ flex: 1 }}>
-     <ParallaxScrollView
-       headerBackgroundColor={{ light: '#FFA726', dark: '#FF7043' }}
-       headerImage={
-         <Image
-           source={require('@/assets/images/Trans_TMC_Logo.png')}
-           style={styles.restaurantLogo}
-         />
-       }>
-       <ThemedView style={styles.titleContainer}>
-         <ThemedText type="title">Payment Options</ThemedText>
-       </ThemedView>
-       <ThemedView style={styles.stepContainer}>
-         <ThemedText type="subtitle">1. Apple Pay</ThemedText>
-         <Image
-           source={require('@/assets/images/applepaylogo.png')}
-           style={styles.invertedapplePayLogo}
-         />
-         <ThemedText type="subtitle">2. Google Pay</ThemedText>
-         <Image
-           source={require('@/assets/images/googlepaylogo.svg.png')}
-           style={styles.googlePayLogo}
-         />
-         <ThemedText type="subtitle">3. Venmo</ThemedText>
-         <Image
-           source={require('@/assets/images/Venmo_logo.png')}
-           style={styles.venmoLogo}
-         />
-         <ThemedText type="subtitle">4. Credit Card/Debit Card</ThemedText>
-         <Image
-           source={require('@/assets/images/6963703.png')}
-           style={styles.creditCardLogo} 
-         />
-       </ThemedView>
-     </ParallaxScrollView>
+  const isCartEmpty = cart.length === 0;
 
+  useEffect(() => {
+    if (isFocused && isCartEmpty) {
+      setCartModalVisible(true);
+    } else {
+      setCartModalVisible(false);
+    }
+  }, [isFocused, isCartEmpty]);
 
-     {/* Modal for Empty Cart */}
-    <Modal
-      animationType="fade"
-      transparent={true}
-      visible={isCartModalVisible}
-      onRequestClose={closeModalAndNavigate}>
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalText}>Order Summary:</Text>
-          <Button title="Add Items to Cart" onPress={closeModalAndNavigate} color="red" />
-          <Button title="Complete Order" onPress={openNewModal} color="blue" />
-          <Button title="View Payment Options" onPress={closeModal} color="" />
+  const closeModal = () => {
+    setCartModalVisible(false);
+  };
+
+  const closeModalAndNavigate = () => {
+    setCartModalVisible(false);
+    navigation.navigate('explore');
+  };
+
+  const openNewModal = () => {
+    setCartModalVisible(false);
+    setIsNewModalVisible(true);
+  };
+
+  const closeNewModal = () => {
+    setIsNewModalVisible(false);
+  };
+
+  const backToOrderSummary = () => {
+    setIsNewModalVisible(false);
+    setCartModalVisible(true);
+  };
+
+  const backtoOrderTotal = () => {  
+      setIsPaymentMethodModalVisible(false);
+      setIsNewModalVisible(true);
+    }
+
+  // New functions for payment modal
+  const openPaymentModal = () => {
+      setIsNewModalVisible(false);
+      setIsPaymentMethodModalVisible(true);
+    };
+  
+    const handleDone = () => {  
+      setIsPaymentConfirmationModalVisible(false);
+      navigation.navigate('explore');
+    }
+  
+    const handleCompletePayment = () => { 
+      setIsPaymentMethodModalVisible(false);
+      setIsPaymentConfirmationModalVisible(true);
+    }
+
+  const closePaymentMethodModal = () => {
+    setIsPaymentMethodModalVisible(false);
+    setSelectedPaymentMethod('');
+  };
+
+  
+
+  return (
+    <ThemedView style={{ flex: 1 }}>
+      <ParallaxScrollView
+        headerBackgroundColor={{ light: '#FFA726', dark: '#FF7043' }}
+        headerImage={
+          <Image
+            source={require('@/assets/images/Trans_TMC_Logo.png')}
+            style={styles.restaurantLogo}
+          />
+        }>
+        <ThemedView style={styles.titleContainer}>
+          <ThemedText type="title">Payment Options</ThemedText>
+        </ThemedView>
+        <ThemedView style={styles.stepContainer}>
+          <ThemedText type="subtitle">1. Apple Pay</ThemedText>
+          <Image
+            source={require('@/assets/images/applepaylogo.png')}
+            style={styles.invertedapplePayLogo}
+          />
+          <ThemedText type="subtitle">2. Google Pay</ThemedText>
+          <Image
+            source={require('@/assets/images/googlepaylogo.svg.png')}
+            style={styles.googlePayLogo}
+          />
+          <ThemedText type="subtitle">3. Venmo</ThemedText>
+          <Image
+            source={require('@/assets/images/Venmo_logo.png')}
+            style={styles.venmoLogo}
+          />
+          <ThemedText type="subtitle">4. Credit Card/Debit Card</ThemedText>
+          <Image
+            source={require('@/assets/images/6963703.png')}
+            style={styles.creditCardLogo} 
+          />
+        </ThemedView>
+      </ParallaxScrollView>
+
+      {/* Modal for Empty Cart */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isCartModalVisible}
+        onRequestClose={closeModalAndNavigate}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>Order Summary:</Text>
+            <Button title="Add Items to Cart" onPress={closeModalAndNavigate} color="red" />
+            <Button title="Complete Order" onPress={openNewModal} color="blue" />
+            <Button title="View Payment Options" onPress={closeModal} color="" />
+          </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
 
-    {/* Order Modal */}
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={isNewModalVisible}
-      onRequestClose={closeNewModal}>
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalText}>Order Total: </Text>
-          <Text style={styles.modalSubtitle}>Subtotal: $5.99 </Text>
-          <Text style={styles.modalSubtitle}>Tax: $0.53 </Text>
-          <Text style={styles.modalSubtitle}>Total: $6.52 </Text>
-          <Text style={styles.modalSubtitle}> </Text>
-          <Image source={require('@/assets/images/TMC_Logo.png')} style={styles.tmcLogo} />
-          <Button title="Back to Order Summary" onPress={backToOrderSummary} color="blue" />           
-          <Button title="Pay Now" onPress={closeNewModal} color="green" />
+      {/* Order Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isNewModalVisible}
+        onRequestClose={closeNewModal}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>Order Total: </Text>
+            <Text style={styles.modalSubtitle}>Subtotal: $5.99 </Text>
+            <Text style={styles.modalSubtitle}>Tax: $0.53 </Text>
+            <Text style={styles.modalSubtitle}>Total: $6.52 </Text>
+            <Text style={styles.modalSubtitle}> </Text>
+            <Image source={require('@/assets/images/TMC_Logo.png')} style={styles.tmcLogo} />
+            <Button title="Back to Order Summary" onPress={backToOrderSummary} color="blue" />           
+            <Button title="Pay Now" onPress={openPaymentModal} color="green" />
+          </View>
         </View>
-      </View>
-    </Modal>
-   </ThemedView>
- );
+      </Modal>
+
+     {/* Payment Method Selection Modal */}
+     <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isPaymentMethodModalVisible}
+        onRequestClose={closePaymentMethodModal}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>Select Payment Method</Text>
+            
+            <View style={styles.paymentButtonsContainer}>
+              <PaymentButton
+                onPress={() => {
+                  setSelectedPaymentMethod('Apple Pay');
+                  console.log('Apple Pay selected');
+                }}
+                logo={require('@/assets/images/applepaylogo.png')}
+                style={styles.applePayButton}
+                testID="apple-pay-button"
+              />
+
+              <PaymentButton
+                onPress={() => {
+                  setSelectedPaymentMethod('Google Pay');
+                  console.log('Google Pay selected');
+                }}
+                logo={require('@/assets/images/googlepaylogo.svg.png')}
+                style={styles.googlePayButton}
+                testID="google-pay-button"
+              />
+
+              <PaymentButton
+                onPress={() => {
+                  setSelectedPaymentMethod('Venmo');
+                  console.log('Venmo selected');
+                }}
+                logo={require('@/assets/images/Venmo_logo.png')}
+                style={styles.venmoButton}
+                testID="venmo-button"
+              />
+
+              <PaymentButton
+                onPress={() => {
+                  setSelectedPaymentMethod('Credit Card');
+                  console.log('Credit Card selected');
+                }}
+                logo={require('@/assets/images/6963703.png')}
+                style={styles.creditCardButton}
+                testID="credit-card-button"
+              />
+            </View>
+
+            <Text style={styles.modalSubtitle}>Total: $6.52</Text>
+            <Button title="Back to Order Total" onPress={backtoOrderTotal} color="blue" />
+            <Button 
+              title="Complete Payment" 
+              onPress={handleCompletePayment}
+              color="green"
+              disabled={!selectedPaymentMethod}
+            />
+            <Button title="Cancel" onPress={closePaymentMethodModal} color="red" />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Payment Confirmation Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isPaymentConfirmationModalVisible}
+        onRequestClose={handleDone}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>Payment Confirmation</Text>
+            <Text style={styles.modalSubtitle}>Order #12345</Text>
+            <Text style={styles.modalSubtitle}>Total Paid: $6.52</Text>
+            <Text style={styles.modalSubtitle}>Payment Method: {selectedPaymentMethod}</Text>
+            <Text style={styles.modalSubtitle}>Date: {new Date().toLocaleDateString()}</Text>
+            <Text style={styles.modalSubtitle}> </Text>
+            <Image source={require('@/assets/images/TMC_Logo.png')} style={styles.tmcLogo} />
+            <Text style={[styles.modalSubtitle, styles.successMessage]}>
+              Payment Successful! Thank you for your order.
+            </Text>
+            <Text style={styles.modalSubtitle}>
+              Your order will be ready for pickup in approximately 15-20 minutes.
+            </Text>
+            <Button title="Done" onPress={handleDone} color="green" />
+          </View>
+        </View>
+      </Modal>
+     
+    </ThemedView>
+  );
 }
 
-
 const styles = StyleSheet.create({
- titleContainer: {
-   flexDirection: 'row',
-   alignItems: 'center',
-   gap: 8,
-   marginTop: 20,
-   marginBottom: 20,
- },
- stepContainer: {
-   gap: 10,
-   marginBottom: 12,
-   paddingHorizontal: 16,
- },
- restaurantLogo: {
-   height: 200,
-   width: '100%',
-   resizeMode: 'contain',
-   marginTop: 20,
-   marginBottom: 20,
- },
- invertedapplePayLogo: {
-   height: 75,
-   width: 75,
-   tintColor: 'red',
-   resizeMode: 'contain',
- },
- googlePayLogo: {
-   height: 75,
-   width: 75,
-   resizeMode: 'contain',
- },
- venmoLogo: {
-   height: 75,
-   width: 75,
-   resizeMode: 'contain',
- },
- creditCardLogo: {
-   height: 75,
-   width: 75,
-   resizeMode: 'contain',
- },
- modalContainer: {
-   flex: 1,
-   justifyContent: 'center',
-   alignItems: 'center',
-   backgroundColor: 'rgba(0, 0, 0, 0.5)',
- },
- modalContent: {
-   backgroundColor: '#D88A3C',
-   borderRadius: 10,
-   padding: 20,
-   alignItems: 'center',
-   width: '80%',
- },
- emptyCartImage: {
-   height: 100,
-   width: 100,
-   marginBottom: 20,
- },
- modalText: {
-   fontSize: 18,
-   fontWeight: 'bold',
-   marginBottom: 10,
-   color: '#fff',
- },
- modalSubtitle: {
-   fontSize: 14,
-   color: '#fff',
-   marginBottom: 5,
- },
- tmcLogo: {
-  height: 75,
-  width: 75,
-  marginBottom: 20,
-  marginTop: 0,
-  borderRadius: 50, // Make the logo circular
-},
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  stepContainer: {
+    gap: 10,
+    marginBottom: 12,
+    paddingHorizontal: 16,
+  },
+  restaurantLogo: {
+    height: 200,
+    width: '100%',
+    resizeMode: 'contain',
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  invertedapplePayLogo: {
+    height: 75,
+    width: 75,
+    tintColor: 'red',
+    resizeMode: 'contain',
+  },
+  googlePayLogo: {
+    height: 75,
+    width: 75,
+    resizeMode: 'contain',
+  },
+  venmoLogo: {
+    height: 75,
+    width: 75,
+    resizeMode: 'contain',
+  },
+  creditCardLogo: {
+    height: 75,
+    width: 75,
+    resizeMode: 'contain',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#D88A3C',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+    width: '80%',
+  },
+  emptyCartImage: {
+    height: 100,
+    width: 100,
+    marginBottom: 20,
+  },
+  modalText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#fff',
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#fff',
+    marginBottom: 5,
+  },
+  tmcLogo: {
+    height: 75,
+    width: 75,
+    marginBottom: 20,
+    marginTop: 0,
+    borderRadius: 50,
+  },
+  successMessage: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#90EE90',
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  paymentButtonsContainer: {
+    width: '100%',
+    gap: 10,
+    marginVertical: 15,
+  },
+  
+  paymentButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    marginVertical: 5,
+  },
+
+  paymentLogo: {
+    height: 30,
+    width: 100,
+  },
+
+  paymentButtonText: {
+    marginLeft: 10,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  applePayButton: {
+    backgroundColor: 'red',
+  },
+
+  googlePayButton: {
+    backgroundColor: '#fff',
+  },
+
+  venmoButton: {
+    backgroundColor: '#008CFF',
+  },
+
+  creditCardButton: {
+    backgroundColor: '#fff',
+  },
 });
-
-
-
-
