@@ -210,6 +210,9 @@ app.post('/account', async (req, res) => {
     if (!newAccount.hasRequiredPostFields()) {
         return res.status(400).json({ error: 'Required fields are missing' });
     }
+
+    // the cart of new accounts will always be empty
+    newAccount.cart = []
     
     try {
         const account = await createAccount(newAccount);
@@ -352,7 +355,7 @@ app.post('/activateLocation', async (req, res) => {
 async function getMenuItemsFromCart( cart ){
     let items = []
     for (let i = 0; i < cart.length; i++) { 
-        let query = {_id : new ObjectId(cart[i])}
+        let query = {_id : new ObjectId(cart[i]._id)}
         let foundMenuItems = await getAllMenuItems(query);
         items.push(foundMenuItems[0])
     }
