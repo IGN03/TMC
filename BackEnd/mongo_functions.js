@@ -389,6 +389,9 @@ app.post('/orderFromCart', async(req, res) => {
             query._id = new ObjectId(query._id)
             const foundAccount = await getAccounts(query);
             cart = foundAccount[0].cart
+            if (cart.length< 1){
+                res.status(400).json({error: 'The cart is empty'})
+            }
             // calculte the total cost of the items
             let foundMenuItems = await getMenuItemsFromCart(cart)
             let cost = 0

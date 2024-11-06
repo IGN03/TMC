@@ -28,6 +28,7 @@ function testCreateEmptyMenuItem(){
     assert.strictEqual(menuItem.price, -1, "price should equal be -1");
     assert.strictEqual(menuItem.allergen, "", "allergen should be empty");
     assert.strictEqual(menuItem.description, "", "description should be empty");
+    assert.strictEqual(menuItem.active, true, "The menu item should be active");
 }
 
 
@@ -142,7 +143,6 @@ function testCreateEmptyAccount(){
     assert.strictEqual(account.phone, "", "phone should be empty");
     assert.strictEqual(account.accessLevel, -1, "accessLevel should equal -1");
     assert.strictEqual(account.cart.length, 0, "cart should be empty");
-
 }
 
 

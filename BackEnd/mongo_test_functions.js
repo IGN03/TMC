@@ -83,9 +83,9 @@ async function testPostMenuItem(){
     result = await postData(url, body);
     assert.strictEqual(result.message, 'Menu item added successfully');
     const insertedId = result.menuItem;
-    //result = await fetchData(BASE_URL + '/menuItems?_id=' + insertedId, '_id='+ insertedId)
     result = await fetchData(BASE_URL + '/menuItems?_id='+ insertedId)
     assert.strictEqual(result.foundMenuItems[0]._id, insertedId )
+    assert.strictEqual(result.foundMenuItems[0].active, true )
 }
 
 async function testPostEmptyMenuItem(){
@@ -121,7 +121,8 @@ async function testUpdateMenuItem(){
     const updateItem = {
         name: 'Updated Item Name',
         description: 'This is the updated description of the item',
-        price: 99.99
+        price: 99.99,
+        active: false
     };
     await updateData(url + '?_id='+ insertedId, updateItem)
     result = await fetchData(BASE_URL + '/menuItems?_id='+ insertedId)
@@ -129,6 +130,7 @@ async function testUpdateMenuItem(){
     assert.strictEqual(result.foundMenuItems[0].name, updateItem.name)
     assert.strictEqual(result.foundMenuItems[0].description, updateItem.description)
     assert.strictEqual(result.foundMenuItems[0].price, updateItem.price)
+    assert.strictEqual(result.foundMenuItems[0].active, updateItem.active)
 }
 
 

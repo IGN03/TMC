@@ -25,6 +25,7 @@ class MenuItem extends TableObject{
         this.allergen = data.allergen || "";
         this.description = data.description || "";
         this.image = data.image || "";
+        this.active = data.active || true
     }
 
     hasRequiredPostFields(){
@@ -34,7 +35,7 @@ class MenuItem extends TableObject{
     convertToDict(){
         return {
             _id : this._id, name : this.name, price : this.price, allergen : this.allergen, 
-            description : this.description, image : this.image
+            description : this.description, image : this.image, active : this.active
         }
     }
 }
