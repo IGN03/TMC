@@ -103,7 +103,6 @@ class PickupLocation extends TableObject{
         this.contactInfo = data.contactInfo || "";
         this.name = data.name || "";
         this.active = data.active || false;
-        this.pickupTime = data.pickupTime;
     }
 
     hasRequiredPostFields(){
@@ -111,7 +110,7 @@ class PickupLocation extends TableObject{
     }
 
     convertToDict() {
-        return {_id : this._id, address : this.address, contactInfo : this.contactInfo, name : this.name, active : this.active, pickupTime: this.pickupTime}
+        return {_id : this._id, address : this.address, contactInfo : this.contactInfo, name : this.name, active : this.active}
     }
 }
 
@@ -120,6 +119,5 @@ module.exports = {
     MenuItem,
     Order,
     Account,
-    PickupLocation,
-    PickupTime
+    PickupLocation
 }

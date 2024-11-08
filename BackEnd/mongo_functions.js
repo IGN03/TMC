@@ -1,5 +1,5 @@
 //import { MenuItem, Order, Account, PickupLocation } from './models.js';
-const { MenuItem, Order, Account, PickupLocation, PickupTime } = require("./models.js")
+const { MenuItem, Order, Account, PickupLocation } = require("./models.js")
 const { MongoClient, ServerApiVersion, ObjectId  } = require("mongodb");
 const cors = require('cors');
 require('dotenv').config();
@@ -35,7 +35,6 @@ const menuItems = myDB.collection("menuItems");
 const orders = myDB.collection("orders");
 const accounts = myDB.collection("accounts");
 const pickupLocations = myDB.collection("pickupLocations");
-const pickupTimes = myDB.collection("pickupTimes")
 
 async function postMenuItem(newMenuItem){
     const result = await menuItems.insertOne(newMenuItem.getPostDict());
@@ -325,6 +324,7 @@ app.put('/pickupLocation', async (req, res) => {
     }
 });
 
+
 async function ActivatePickupLocation(filter){
     result = await pickupLocations.updateMany({active : true}, {$set : {active : false}});
     result = await pickupLocations.updateOne(filter, {$set: {active : true}});
@@ -345,101 +345,6 @@ app.post('/activateLocation', async (req, res) => {
     } catch (error) {
         console.log(error)
         res.status(500).json({ error: 'Failed activate location' });
-    }
-});
-
-async function createPickupTime(newPickupTime){
-    const result = await pickupTimes.insertOne(newPickupTime.getPostDict());
-    console.log(
-        `pickup time inserted with the _id: ${result.insertedId}`,
-    );
-    return result.insertedId
-}
-
-
-async function getPickupTimes(query={}){
-    const result = await pickupTimes.find(query).toArray();
-    console.log("all pickup times: ", result)
-    return result   
-}
-
-async function updatePickupLocation(filter, updateDoc){
-    const result = await pickupTimes.updateOne(filter, updateDoc);
-    console.log(`${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount} document(s)`);
-    return result
-}
-
-
-app.post('/pickupTime', async (req, res) => {
-    const newPickupTime = new PickupTime(req.body)
-
-    if (!newPickupTime.hasRequiredPostFields()) {
-        return res.status(400).json({ error: 'Required fields are missing' });
-    }
-    
-    try {
-        const pickupTime = await createPickupTime(newPickupTime);
-        res.status(201).json({ message: 'pickup time successfully created', pickupTime });
-        return pickupTime
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to create pickup time' });
-    }
-});
-
-
-app.get('/pickupTimes', async (req, res) => {
-    const query = req.query;
-    if(query._id){
-        query._id = new ObjectId(query._id)
-    }
-    try {
-        const foundPickupTimes = await getPickupTimes(query);
-        res.status(201).json({ message: 'pickup times grabbed', foundPickupTimes });
-        return foundPickupTimes;
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to get pickup times' });
-    }
-});
-
-
-app.put('/pickupTime', async (req, res) => {
-    const updateDoc  = {$set: req.body};
-    const query = req.query
-
-    if(query._id){
-        query._id = new ObjectId(query._id)
-    }
-
-    try {
-        const result = await updatePickupTime(query, updateDoc);
-        res.status(200).json({ matchedCount: result.matchedCount, modifiedCount: result.modifiedCount });
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({ error: 'Failed to update pickup time' });
-    }
-});
-
-
-async function ActivatePickupTime(filter){
-    result = await pickupTimes.updateMany({active : true}, {$set : {active : false}});
-    result = await pickupTimes.updateOne(filter, {$set: {active : true}});
-    return result
-}
-
-
-app.post('/activateTime', async (req, res) => {
-    try {
-        if(!req.body._id){
-            res.status(400).json({error: 'Missing _id field'})
-        } else {
-            const idToActivate = {_id : new ObjectId(req.body._id)} 
-            const pickupTime = await ActivatePickupTime(idToActivate);
-            res.status(201).json({ message: 'active location changed', pickupTime });
-            return pickupTime
-        }
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({ error: 'Failed activate time' });
     }
 });
 
