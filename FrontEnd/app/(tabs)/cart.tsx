@@ -439,7 +439,6 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     alignItems: 'center',
   },
-
   buttonText: {
     color: 'white',
     fontSize: 16,
