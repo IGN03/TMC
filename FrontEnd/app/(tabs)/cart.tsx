@@ -147,18 +147,37 @@ export default function CartScreen() {
         </ThemedView>
       </ParallaxScrollView>
 
-      {/* Modal for Empty Cart */}
+      {/* Modal for options when checking out */}
       <Modal
         animationType="slide"
         transparent={true}
         visible={isCartModalVisible}
-        onRequestClose={closeModalAndNavigate}>
+        onRequestClose={closeModalAndNavigate}
+      >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalText}>Order Summary:</Text>
-            <Button title="Add Items to Cart" onPress={closeModalAndNavigate} color="red" />
-            <Button title="Complete Order" onPress={openNewModal} color="blue" />
-            <Button title="View Payment Options" onPress={closeModal} color="" />
+            <Text style={styles.modalText}>Checkout Options:</Text>
+            
+            <TouchableOpacity 
+              onPress={closeModalAndNavigate}
+              style={[styles.touchableButton, { backgroundColor: 'red' }]}
+            >
+              <Text style={styles.buttonText}>Add Items to Cart</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              onPress={openNewModal}
+              style={[styles.touchableButton, { backgroundColor: 'blue' }]}
+            >
+              <Text style={styles.buttonText}>Complete Order</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              onPress={closeModal}
+              style={[styles.touchableButton, { backgroundColor: 'gray' }]}
+            >
+              <Text style={styles.buttonText}>View Payment Options</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -340,7 +359,7 @@ const styles = StyleSheet.create({
   modalText: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 20,
     color: '#fff',
   },
   modalSubtitle: {
@@ -411,5 +430,19 @@ const styles = StyleSheet.create({
 
   creditCardButton: {
     backgroundColor: '#fff',
+  },
+
+  touchableButton: {
+    width: '100%',
+    padding: 15,
+    borderRadius: 8,
+    marginVertical: 5,
+    alignItems: 'center',
+  },
+
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
