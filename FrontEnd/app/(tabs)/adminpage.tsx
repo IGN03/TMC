@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, FlatList, TextInput, StyleSheet, Image, useColorScheme, Modal } from 'react-native';
+import { View, Text, Button, FlatList, TextInput, StyleSheet, Image, useColorScheme, Modal, Alert } from 'react-native';
 import axios from 'axios';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
@@ -31,6 +31,7 @@ const AdminPage = () => {
   const [editMode, setEditMode] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [menuModalVisible, setMenuModalVisible] = useState(false); // Modal for menu management
+  const [newItemModalVisible, setNewItemModalVisible] = useState(false); // Modal for menu management
 
   const BACKEND_URL = 'http://localhost:3000';
 
@@ -49,6 +50,26 @@ const AdminPage = () => {
   };
 
   const handleSubmit = async () => {
+    const { name, price, allergen, description } = newMenuItem;
+
+    // Validation checks
+    if (!name) {
+      Alert.alert('Validation Error', 'Please enter a name.');
+      return;
+    }
+    if (!price || isNaN(price) || price <= 0) {
+      Alert.alert('Validation Error', 'Please enter a valid price greater than 0.');
+      return;
+    }
+    if (!allergen) {
+      Alert.alert('Validation Error', 'Please enter an allergen.');
+      return;
+    }
+    if (!description) {
+      Alert.alert('Validation Error', 'Please enter a description.');
+      return;
+    }
+
     const method = editMode ? 'PUT' : 'POST';
     const url = editMode 
       ? `${BACKEND_URL}/menuItem?_id=${selectedItem?._id}` 
@@ -81,15 +102,10 @@ const AdminPage = () => {
     setSelectedItem(null);
   };
 
-  const saveMenuItem = () => {
-  
 
-    // Save logic for menu item would go here
-
-    setMenuModalVisible(false);
-  };
 
   const selectItemForEditing = (item: MenuItem) => {
+    setNewItemModalVisible(true)
     setEditMode(true);
     setSelectedItem(item);
     setNewMenuItem({ 
@@ -98,6 +114,7 @@ const AdminPage = () => {
       allergen: item.allergen,
       description: item.description 
     });
+    
   };
 
   const colorScheme = useColorScheme(); 
@@ -112,66 +129,90 @@ const AdminPage = () => {
 
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#FFA726', dark: '#FF7043' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/Trans_TMC_Logo.png')}
-          style={styles.restaurantLogo}
-        />
-      }>
+    <View>
+      <ParallaxScrollView
+        headerBackgroundColor={{ light: '#FFA726', dark: '#FF7043' }}
+        headerImage={
+          <Image
+            source={require('@/assets/images/Trans_TMC_Logo.png')}
+            style={styles.restaurantLogo}
+          />
+        }>
 
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Admin Page</ThemedText>
-      </ThemedView>
+        <ThemedView style={styles.titleContainer}>
+          <ThemedText type="title">Admin Page</ThemedText>
+        </ThemedView>
 
-      <Button title="Manage Menu" onPress={() => setMenuModalVisible(true)} color={colors.buttonColor}/>
+        <Button title="Manage Menu" onPress={() => setMenuModalVisible(true)} color={colors.buttonColor}/>
 
-      <Modal visible={menuModalVisible} transparent={true} animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <ThemedText type="title">Admin Page</ThemedText>
-            <TextInput
-              style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
-              placeholder="Name"
-              placeholderTextColor={colors.placeholderText}
-              value={newMenuItem.name}
-              onChangeText={(text) => setNewMenuItem({...newMenuItem, name: text})}
-              autoCapitalize="none"
-            />
-            <TextInput
-              style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
-              placeholder="Price"
-              placeholderTextColor={colors.placeholderText}
-              value={newMenuItem.price ? String(newMenuItem.price) : ''}
-              onChangeText={(text) => setNewMenuItem({...newMenuItem, price: parseFloat(text) || 0})}
-              keyboardType="decimal-pad"
-              autoCapitalize="none"
-            />
-            <TextInput
-              style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
-              placeholder="Allergen"
-              placeholderTextColor={colors.placeholderText}
-              value={newMenuItem.allergen}
-              onChangeText={(text) => setNewMenuItem({...newMenuItem, allergen: text})}
-              autoCapitalize="none"
-            />
-            <TextInput
-              style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
-              placeholder="Description"
-              placeholderTextColor={colors.placeholderText}
-              value={newMenuItem.description}
-              onChangeText={(text) => setNewMenuItem({...newMenuItem, description: text})}
-              autoCapitalize="none"
-            />
-            <Button title="Save" onPress={handleSubmit} color={colors.buttonColor}/>
-            <Button title="Cancel" onPress={() => setMenuModalVisible(false)} color={'red'}/>
+        <Modal visible={menuModalVisible} transparent={true} animationType="slide">
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <ThemedText type="title">Menu Changes</ThemedText>
+              <Button title="Add New Menu" onPress={() => setNewItemModalVisible(true)} color={colors.buttonColor}/>
+              <Modal visible={newItemModalVisible} transparent={true} animationType="slide">
+                <View style={styles.modalContainer}>
+                  <View style={styles.modalContent}>
+                    <ThemedText type="title">New/Edit Item</ThemedText>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
+                      placeholder="Name"
+                      placeholderTextColor={colors.placeholderText}
+                      value={newMenuItem.name}
+                      onChangeText={(text) => setNewMenuItem({...newMenuItem, name: text})}
+                      autoCapitalize="none"
+                    />
+                    <TextInput
+                      style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
+                      placeholder="Price"
+                      placeholderTextColor={colors.placeholderText}
+                      value={newMenuItem.price ? String(newMenuItem.price) : ''}
+                      onChangeText={(text) => setNewMenuItem({...newMenuItem, price: parseFloat(text) || 0})}
+                      keyboardType="decimal-pad"
+                      autoCapitalize="none"
+                    />
+                    <TextInput
+                      style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
+                      placeholder="Allergen"
+                      placeholderTextColor={colors.placeholderText}
+                      value={newMenuItem.allergen}
+                      onChangeText={(text) => setNewMenuItem({...newMenuItem, allergen: text})}
+                      autoCapitalize="none"
+                    />
+                    <TextInput
+                      style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
+                      placeholder="Description"
+                      placeholderTextColor={colors.placeholderText}
+                      value={newMenuItem.description}
+                      onChangeText={(text) => setNewMenuItem({...newMenuItem, description: text})}
+                      autoCapitalize="none"
+                    />
+                    <Button title="Save" onPress={handleSubmit} color={colors.buttonColor}/>
+                    <Button title="Cancel" onPress={() => setNewItemModalVisible(false)} color={'red'}/>
+                  </View>
+                </View>
+              </Modal>
+              <FlatList
+                data={menuItems}
+                keyExtractor={(item) => item._id}
+                renderItem={({ item }) => (
+                  <View style={styles.menuItem}>
+                    <Text style={styles.itemName}>{item.name} - ${item.price.toFixed(2)}</Text>
+                    <Text style={styles.itemDescription}>{item.description}</Text>
+                    <Button
+                      title="Edit"
+                      onPress={() => selectItemForEditing(item)}
+                    />
+                  </View>
+                )}
+              />
+              <Button title="Close" onPress={() => setMenuModalVisible(false)} color={'red'}/>
+            </View>
           </View>
-        </View>
-      </Modal>
-
-      
-    </ParallaxScrollView>
+        </Modal>
+      </ParallaxScrollView>
+    </View>
+    
   );
 };
 
@@ -192,7 +233,7 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '80%',
     padding: 20,
-    backgroundColor: 'white',
+    backgroundColor: 'black',
     borderRadius: 10,
     alignItems: 'center',
   },
