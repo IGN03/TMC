@@ -26,7 +26,7 @@ class MenuItem extends TableObject{
         this.description = data.description || "";
         this.image = data.image || "";
         this.active = data.active || true;
-        this.category = data.category || null;
+        this.category = data.category || "Main";
     }
 
     hasRequiredPostFields(){
