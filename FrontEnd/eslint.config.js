@@ -1,3 +1,4 @@
+const globals = require("globals");
 const js = require("@eslint/js");
 const ts = require("typescript-eslint");
 const prettierConfig = require("eslint-config-prettier");
@@ -8,7 +9,7 @@ module.exports = [
   {
     languageOptions: {
       sourceType: "commonjs",
-      // parser: "@typescript-eslint/parser",
+      globals: { ...globals.node },
     },
     rules: {
       semi: "error",
