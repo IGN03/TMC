@@ -184,23 +184,36 @@ export default function CartScreen() {
 
       {/* Order Modal */}
       <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isNewModalVisible}
-        onRequestClose={closeNewModal}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalText}>Order Total: </Text>
-            <Text style={styles.modalSubtitle}>Subtotal: $5.99 </Text>
-            <Text style={styles.modalSubtitle}>Tax: $0.53 </Text>
-            <Text style={styles.modalSubtitle}>Total: $6.52 </Text>
-            <Text style={styles.modalSubtitle}> </Text>
-            <Image source={require('@/assets/images/TMC_Logo.png')} style={styles.tmcLogo} />
-            <Button title="Back to Order Summary" onPress={backToOrderSummary} color="blue" />           
-            <Button title="Pay Now" onPress={openPaymentModal} color="green" />
-          </View>
+      animationType="slide"
+      transparent={true}
+      visible={isNewModalVisible}
+      onRequestClose={closeNewModal}
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalText}>Order Total: </Text>
+          <Text style={styles.modalSubtitle}>Subtotal: $5.99 </Text>
+          <Text style={styles.modalSubtitle}>Tax: $0.53 </Text>
+          <Text style={styles.modalSubtitle}>Total: $6.52 </Text>
+          <Text style={styles.modalSubtitle}> </Text>
+          <Image source={require('@/assets/images/TMC_Logo.png')} style={styles.tmcLogo} />
+          
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={backToOrderSummary}
+          >
+            <Text style={styles.buttonText}>Back to Order Summary</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.payButton}
+            onPress={openPaymentModal}
+          >
+            <Text style={styles.buttonText}>Pay Now</Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
+      </View>
+    </Modal>
 
      {/* Payment Method Selection Modal */}
      <Modal
@@ -439,6 +452,23 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     alignItems: 'center',
   },
+
+  backButton: {
+    backgroundColor: '#007AFF',
+    padding: 12,
+    borderRadius: 8,
+    width: '100%',
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  payButton: {
+    backgroundColor: '#34C759',
+    padding: 12,
+    borderRadius: 8,
+    width: '100%',
+    alignItems: 'center',
+  },
+  
   buttonText: {
     color: 'white',
     fontSize: 16,
