@@ -120,6 +120,5 @@ module.exports = {
     MenuItem,
     Order,
     Account,
-    PickupLocation,
-    PickupTime
+    PickupLocation
 }
