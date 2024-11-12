@@ -78,7 +78,7 @@ async function testPostMenuItem(){
         name: 'Test Burger',
         price: 9.99,
         description: 'Delicious burger',
-        category: 'Food'
+        category: 'Main Dish'
     };
     result = await postData(url, body);
     assert.strictEqual(result.message, 'Menu item added successfully');
@@ -86,6 +86,7 @@ async function testPostMenuItem(){
     result = await fetchData(BASE_URL + '/menuItems?_id='+ insertedId)
     assert.strictEqual(result.foundMenuItems[0]._id, insertedId )
     assert.strictEqual(result.foundMenuItems[0].active, true )
+    assert.strictEqual(result.foundMenuItems[0].category, body.category )
 }
 
 async function testPostEmptyMenuItem(){

@@ -9,7 +9,8 @@ function testCreateMenuItem(){
         price : 23.4,
         allergen : "vegetarian",
         description : "leaves",
-        image : "www.example.com" 
+        image : "www.example.com",
+        category: "Main Dish" 
     };
     const menuItem = new MenuItem(exampleItem);
     
@@ -18,6 +19,7 @@ function testCreateMenuItem(){
     assert.strictEqual(menuItem.price, exampleItem.price, "price should equal exampleItem.price");
     assert.strictEqual(menuItem.allergen, exampleItem.allergen, "allergen should equal exampleItem.allergen");
     assert.strictEqual(menuItem.description, exampleItem.description, "description should equal exampleItem.description");
+    assert.strictEqual(menuItem.category, exampleItem.category, "category should equal exampleItem.category");
 }
 
 
