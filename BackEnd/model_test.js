@@ -9,7 +9,8 @@ function testCreateMenuItem(){
         price : 23.4,
         allergen : "vegetarian",
         description : "leaves",
-        image : "www.example.com" 
+        image : "www.example.com",
+        category: "Main Dish" 
     };
     const menuItem = new MenuItem(exampleItem);
     
@@ -18,6 +19,7 @@ function testCreateMenuItem(){
     assert.strictEqual(menuItem.price, exampleItem.price, "price should equal exampleItem.price");
     assert.strictEqual(menuItem.allergen, exampleItem.allergen, "allergen should equal exampleItem.allergen");
     assert.strictEqual(menuItem.description, exampleItem.description, "description should equal exampleItem.description");
+    assert.strictEqual(menuItem.category, exampleItem.category, "category should equal exampleItem.category");
 }
 
 
@@ -28,6 +30,7 @@ function testCreateEmptyMenuItem(){
     assert.strictEqual(menuItem.price, -1, "price should equal be -1");
     assert.strictEqual(menuItem.allergen, "", "allergen should be empty");
     assert.strictEqual(menuItem.description, "", "description should be empty");
+    assert.strictEqual(menuItem.active, true, "The menu item should be active");
 }
 
 
@@ -142,7 +145,6 @@ function testCreateEmptyAccount(){
     assert.strictEqual(account.phone, "", "phone should be empty");
     assert.strictEqual(account.accessLevel, -1, "accessLevel should equal -1");
     assert.strictEqual(account.cart.length, 0, "cart should be empty");
-
 }
 
 

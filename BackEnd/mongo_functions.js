@@ -210,6 +210,9 @@ app.post('/account', async (req, res) => {
     if (!newAccount.hasRequiredPostFields()) {
         return res.status(400).json({ error: 'Required fields are missing' });
     }
+
+    // the cart of new accounts will always be empty
+    newAccount.cart = []
     
     try {
         const account = await createAccount(newAccount);
@@ -235,8 +238,22 @@ app.get('/accounts', async (req, res) => {
     }
 });
 
+function isValidCart(cart){
+    for (let i = 0; i < cart.length; i++) { 
+        if(!cart[i]._id || !cart[i].name || !cart[i].price){
+            return false
+        }
+    }
+    return true
+
+}
 
 app.put('/account', async (req, res) => {
+    // Check the cart to make sure it contains the info we want
+    if(req.body.cart && !isValidCart(req.body.cart)){
+        res.status(400).json({ error: 'The cart is invalid: it must contain and _id, name and price' });
+        return
+    }
     const updateDoc  = {$set: req.body};
     const query = req.query
 
@@ -352,7 +369,7 @@ app.post('/activateLocation', async (req, res) => {
 async function getMenuItemsFromCart( cart ){
     let items = []
     for (let i = 0; i < cart.length; i++) { 
-        let query = {_id : new ObjectId(cart[i])}
+        let query = {_id : new ObjectId(cart[i]._id)}
         let foundMenuItems = await getAllMenuItems(query);
         items.push(foundMenuItems[0])
     }
@@ -372,6 +389,9 @@ app.post('/orderFromCart', async(req, res) => {
             query._id = new ObjectId(query._id)
             const foundAccount = await getAccounts(query);
             cart = foundAccount[0].cart
+            if (cart.length< 1){
+                res.status(400).json({error: 'The cart is empty'})
+            }
             // calculte the total cost of the items
             let foundMenuItems = await getMenuItemsFromCart(cart)
             let cost = 0

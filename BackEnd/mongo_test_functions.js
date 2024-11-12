@@ -78,14 +78,15 @@ async function testPostMenuItem(){
         name: 'Test Burger',
         price: 9.99,
         description: 'Delicious burger',
-        category: 'Food'
+        category: 'Main Dish'
     };
     result = await postData(url, body);
     assert.strictEqual(result.message, 'Menu item added successfully');
     const insertedId = result.menuItem;
-    //result = await fetchData(BASE_URL + '/menuItems?_id=' + insertedId, '_id='+ insertedId)
     result = await fetchData(BASE_URL + '/menuItems?_id='+ insertedId)
     assert.strictEqual(result.foundMenuItems[0]._id, insertedId )
+    assert.strictEqual(result.foundMenuItems[0].active, true )
+    assert.strictEqual(result.foundMenuItems[0].category, body.category )
 }
 
 async function testPostEmptyMenuItem(){
@@ -121,7 +122,8 @@ async function testUpdateMenuItem(){
     const updateItem = {
         name: 'Updated Item Name',
         description: 'This is the updated description of the item',
-        price: 99.99
+        price: 99.99,
+        active: false
     };
     await updateData(url + '?_id='+ insertedId, updateItem)
     result = await fetchData(BASE_URL + '/menuItems?_id='+ insertedId)
@@ -129,6 +131,7 @@ async function testUpdateMenuItem(){
     assert.strictEqual(result.foundMenuItems[0].name, updateItem.name)
     assert.strictEqual(result.foundMenuItems[0].description, updateItem.description)
     assert.strictEqual(result.foundMenuItems[0].price, updateItem.price)
+    assert.strictEqual(result.foundMenuItems[0].active, updateItem.active)
 }
 
 
@@ -212,13 +215,14 @@ async function testPostAccount(){
         password : "12345",
         phone : "122-333-4444",
         accessLevel : 1, 
-        cart : ['1', '2', '3', '4']
+        cart : [{_id: 1, name: "m", price: 10}, {_id: 1, name: "m", price: 10}, {_id: 2, name: "n", price: 8}, {_id: 5, name: "p", price: 2.4}]
     };
     result = await postData(url, body);
     assert.strictEqual(result.message, 'account successfully created');
     const insertedId = result.account;
     result = await fetchData(BASE_URL + '/accounts?_id='+ insertedId)
     assert.strictEqual(result.foundAccounts[0]._id, insertedId )
+    assert.strictEqual(result.foundAccounts[0].cart.length, 0)
 }
 
 async function testPostEmptyAccount(){
@@ -235,7 +239,7 @@ async function testPostIncompleteAccount(){
         name : "the tester",
         phone : "122-333-4444",
         accessLevel : 1, 
-        cart : ['1', '2', '3', '4']
+        cart :  [{_id: 1, name: "m", price: 10}, {_id: 1, name: "m", price: 10}, {_id: 2, name: "n", price: 8}, {_id: 5, name: "p", price: 2.4}]
     };
     result = await postData(url, body);
     assert.strictEqual(result.error, 'Required fields are missing');
@@ -249,7 +253,7 @@ async function testUpdateAccount(){
         password : "12345",
         phone : "122-333-4444",
         accessLevel : 1, 
-        cart : ['1', '2', '3', '4']
+        cart : []
     };
     result = await postData(url, body);
     assert.strictEqual(result.message, 'account successfully created');
@@ -259,13 +263,13 @@ async function testUpdateAccount(){
         password : "abcdefg",
         phone : "122-333-5555",
         accessLevel : 0, 
-        cart : ['9', '2', '3', '4']
+        cart : [{_id: 1, name: "m", price: 10}, {_id: 1, name: "m", price: 10}, {_id: 2, name: "n", price: 8}, {_id: 5, name: "p", price: 2.4}]
     };
     await updateData(url + '?_id='+ insertedId, updateItem)
     result = await fetchData(BASE_URL + '/accounts?_id='+ insertedId)
     assert.strictEqual(result.foundAccounts[0]._id, insertedId )
     assert.strictEqual(result.foundAccounts[0].email, updateItem.email)
-    assert.strictEqual(result.foundAccounts[0].cart[0], updateItem.cart[0])
+    assert.strictEqual(result.foundAccounts[0].cart[0].name, updateItem.cart[0].name)
     assert.strictEqual(result.foundAccounts[0].password, updateItem.password)
     assert.strictEqual(result.foundAccounts[0].phone, updateItem.phone)
     assert.strictEqual(result.foundAccounts[0].accessLevel, updateItem.accessLevel)
@@ -362,7 +366,7 @@ async function testActivateLocation(){
 
 // add 3 menu Items and return thier Ids
 async function fillMenuItems(){
-    let menuIds = []
+    let cart = []
     let menuUrl = BASE_URL + '/menuItem';
     let body = [
         {
@@ -386,15 +390,15 @@ async function fillMenuItems(){
     ];
     for (let i = 0; i< body.length; i++){
         let result = await postData(menuUrl, body[i]);
-        menuIds.push(result.menuItem)
+        cart.push({_id: result.menuItem, name: body[i].name, price: body[i].price});
     }
-    return menuIds
+    return cart
 }
 
 
-async function testOrderFromCart(){
+async function setUpTestAccount(){
     //setup the account
-    let menuIds = await fillMenuItems()
+    let menuItems = await fillMenuItems()
     let accountUrl = BASE_URL + '/account';
     const body = {  
         name : "the tester",
@@ -402,20 +406,29 @@ async function testOrderFromCart(){
         password : "12345",
         phone : "122-333-4444",
         accessLevel : 1, 
-        cart : menuIds
     };
     let result = await postData(accountUrl, body);
-    let accountId = result.account;
+    let insertedId = result.account;
+    const updateItem = {  
+        cart : menuItems
+    };
+    await updateData(accountUrl + '?_id='+ insertedId, updateItem)
+    return {id: insertedId, menu : menuItems}
+}
+
+async function testOrderFromCart(){
+    let account = await setUpTestAccount()
+    let accountId = account.id
     //Create the order
     let orderFromCartUrl = BASE_URL + '/orderFromCart?_id=' + accountId
     result = await postData(orderFromCartUrl, {pickupLocation: '1', tip: 1.2})
     result = await fetchData(BASE_URL + '/orders?_id='+ result.orderId)
     assert.strictEqual(result.foundOrders[0].costOfItems, 59.99 )
     assert.strictEqual(result.foundOrders[0].tip, 1.2 )
-    assert.strictEqual(result.foundOrders[0].items.length, menuIds.length )
-    assert.strictEqual(result.foundOrders[0].items[0], menuIds[0] )
-    assert.strictEqual(result.foundOrders[0].items[1], menuIds[1] )
-    assert.strictEqual(result.foundOrders[0].items[2], menuIds[2] )
+    assert.strictEqual(result.foundOrders[0].items.length, account.menu.length )
+    assert.strictEqual(result.foundOrders[0].items[0]._id,  account.menu[0]._id )
+    assert.strictEqual(result.foundOrders[0].items[1]._id,  account.menu[1]._id )
+    assert.strictEqual(result.foundOrders[0].items[2]._id,  account.menu[2]._id )
 
 }
 
@@ -446,7 +459,6 @@ async function clearTestDB(){
 async function runTests(){
     // We only want to run the tests on the test database 
     assert.strictEqual(process.env.DATABASE, TEST_DB)
-    
     await testPostMenuItem()
     await testPostEmptyMenuItem()
     await testPostIncompleteMenuItem()
