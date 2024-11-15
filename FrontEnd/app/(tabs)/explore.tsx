@@ -37,7 +37,7 @@ const MenuItem = ({ itemId, itemName, itemDescription, itemPrice, itemImage, ite
 
 // The components of the MenuScreen
 export default function MenuScreen() {
-  const [menuItems, setMenuItems] = useState([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [quantities, setQuantities] = useState({});
   const [selectedItems, setSelectedItems] = useState([]);
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
@@ -53,31 +53,40 @@ export default function MenuScreen() {
     const loadMenuItems = async () => {
       try 
       {
+        console.log('Fetching from:', `${BACKEND_URL}/menuItems`);
         const response = await axios.get(`${BACKEND_URL}/menuItems`);
-        const items = Array.isArray(response.data) ? response.data : [];
+        console.log('Response data:', response.data);
+        const items = Array.isArray(response.data.foundItems) ? response.data.foundItems : [];
         setMenuItems(items);
         
         // Initialize quantities state with all items set to 0
         const initialQuantities = {};
         items.forEach(item => 
         {
-          initialQuantities[item.name] = 0;
+          initialQuantities[item._id] = 0;
         });
         setQuantities(initialQuantities);
 
-        // Categorize items
+        /* Categorize items
         const categorized = 
         {
-          appetizers: items.filter(item => item.category === 'appetizer'),
-          mainDishes: items.filter(item => item.category === 'main'),
-          desserts: items.filter(item => item.category === 'dessert')
+          appetizers: items.filter(item => item.category === 'Appetizer'),
+          mainDishes: items.filter(item => item.category === 'Main'),
+          desserts: items.filter(item => item.category === 'Dessert')
         };
+        console.log('Categorized items:', categorized);
         setCategorizedItems(categorized);
+        */
       } 
       
       catch (error) 
       {
-        console.error('Error fetching menu items:', error);
+      console.error('Error fetching menu items:', 
+      {
+        message: error.message,
+        responseData: error.response?.data,
+        fullError: error
+        });
       }
     };
 
@@ -171,12 +180,12 @@ const Sidebar = ({ cart, isVisible, onClose }) =>
           <ScrollView showsVerticalScrollIndicator={false}>
             {cart.length > 0 ? (
               cart.map((item) => (
-                <View key={item._id} style={styles.itemContainer}>
+                <View key={item._id} style={styles.cartItemContainer}>
                   <View style={styles.cartItemDetails}>
                     <ThemedText style={styles.item}>
                       {item.quantity}x {item.name}
                     </ThemedText>
-                    <ThemedText style={styles.itemPrice}>
+                    <ThemedText style={styles.cartItemPrice}>
                       ${(item.price * item.quantity).toFixed(2)}
                     </ThemedText>
                   </View>
@@ -254,7 +263,7 @@ const Sidebar = ({ cart, isVisible, onClose }) =>
           {/* Appetizers Section */}
           <ThemedView style={styles.sectionContainer}>
             <ThemedText style={styles.subtitle} type="subtitle">Appetizers</ThemedText>
-            {categorizedItems.appetizers.map((item) => (
+            {menuItems.map((item) => (
               <MenuItem
                 key={item._id}
                 itemId={item._id}
@@ -273,7 +282,7 @@ const Sidebar = ({ cart, isVisible, onClose }) =>
           {/* Main Dishes Section */}
           <ThemedView style={styles.sectionContainer}>
             <ThemedText style={styles.subtitle} type="subtitle">Main Dishes</ThemedText>
-            {categorizedItems.mainDishes.map((item) => (
+            {menuItems.map((item) => (
               <MenuItem
                 key={item._id}
                 itemId={item._id}
@@ -292,7 +301,7 @@ const Sidebar = ({ cart, isVisible, onClose }) =>
           {/* Desserts Section */}
           <ThemedView style={styles.sectionContainer}>
             <ThemedText style={styles.subtitle} type="subtitle">Desserts</ThemedText>
-            {categorizedItems.desserts.map((item) => (
+            {menuItems.map((item) => (
               <MenuItem
                 key={item._id}
                 itemId={item._id}
@@ -468,7 +477,7 @@ const styles = StyleSheet.create({
   item: {
     top: 20,
   },
-  // For Sidebar
+  // For Sidebar Text and Icons
   closeButton: {
     position: 'absolute',
     marginTop: 5,
@@ -484,10 +493,23 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#e5dccf',
   },
-  // Only used to right justify the prices in sidebar
-  itemPrice: {
-    top: 20,
+  cartItemContainer: {
+    marginBottom: 15,
+  },
+  cartItemDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  cartItemText: {
+    fontSize: 16,
+    flexShrink: 1,
+  },
+  cartItemPrice: {
+    fontSize: 16,
     textAlign: 'right',
+    width: 100,
+    top: 18,
   },
   bottomPadding: {
     height: 60,
