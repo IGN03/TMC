@@ -50,25 +50,25 @@ const AdminPage = () => {
   };
 
   const handleSubmit = async () => {
-    const { name, price, allergen, description } = newMenuItem;
+    // const { name, price, allergen, description } = newMenuItem;
 
-    // Validation checks
-    if (!name) {
-      Alert.alert('Validation Error', 'Please enter a name.');
-      return;
-    }
-    if (!price || isNaN(price) || price <= 0) {
-      Alert.alert('Validation Error', 'Please enter a valid price greater than 0.');
-      return;
-    }
-    if (!allergen) {
-      Alert.alert('Validation Error', 'Please enter an allergen.');
-      return;
-    }
-    if (!description) {
-      Alert.alert('Validation Error', 'Please enter a description.');
-      return;
-    }
+    // // Validation checks
+    // if (!name) {
+    //   Alert.alert('Validation Error', 'Please enter a name.');
+    //   return;
+    // }
+    // if (!price || isNaN(price) || price <= 0) {
+    //   Alert.alert('Validation Error', 'Please enter a valid price greater than 0.');
+    //   return;
+    // }
+    // if (!allergen) {
+    //   Alert.alert('Validation Error', 'Please enter an allergen.');
+    //   return;
+    // }
+    // if (!description) {
+    //   Alert.alert('Validation Error', 'Please enter a description.');
+    //   return;
+    // }
 
     const method = editMode ? 'PUT' : 'POST';
     const url = editMode 
@@ -129,7 +129,6 @@ const AdminPage = () => {
 
 
   return (
-    <View>
       <ParallaxScrollView
         headerBackgroundColor={{ light: '#FFA726', dark: '#FF7043' }}
         headerImage={
@@ -146,14 +145,18 @@ const AdminPage = () => {
         <Button title="Manage Menu" onPress={() => setMenuModalVisible(true)} color={colors.buttonColor}/>
 
         <Modal visible={menuModalVisible} transparent={true} animationType="slide">
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <ThemedText type="title">Menu Changes</ThemedText>
+          <ThemedView style={styles.modalContainer}>
+            <ThemedView style={styles.modalContent}>
+              <ThemedView style={styles.titleContainer}>
+                <ThemedText type="title">Menu Changes</ThemedText>
+              </ThemedView>
               <Button title="Add New Menu" onPress={() => setNewItemModalVisible(true)} color={colors.buttonColor}/>
               <Modal visible={newItemModalVisible} transparent={true} animationType="slide">
                 <View style={styles.modalContainer}>
                   <View style={styles.modalContent}>
-                    <ThemedText type="title">New/Edit Item</ThemedText>
+                    <ThemedView style={styles.titleContainer}>
+                      <ThemedText type="title">New/Edit Item</ThemedText>
+                    </ThemedView>
                     <TextInput
                       style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
                       placeholder="Name"
@@ -202,16 +205,16 @@ const AdminPage = () => {
                     <Button
                       title="Edit"
                       onPress={() => selectItemForEditing(item)}
+                      color={colors.buttonColor}
                     />
                   </View>
                 )}
               />
               <Button title="Close" onPress={() => setMenuModalVisible(false)} color={'red'}/>
-            </View>
-          </View>
+            </ThemedView>
+          </ThemedView>
         </Modal>
       </ParallaxScrollView>
-    </View>
     
   );
 };
@@ -233,7 +236,7 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '80%',
     padding: 20,
-    backgroundColor: 'black',
+    backgroundColor: 'gray',
     borderRadius: 10,
     alignItems: 'center',
   },
@@ -241,6 +244,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 20,
   },
   container: {
     padding: 20,
