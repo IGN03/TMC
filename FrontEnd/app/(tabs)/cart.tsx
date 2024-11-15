@@ -216,69 +216,85 @@ export default function CartScreen() {
     </Modal>
 
      {/* Payment Method Selection Modal */}
-     <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isPaymentMethodModalVisible}
-        onRequestClose={closePaymentMethodModal}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalText}>Select Payment Method</Text>
-            
-            <View style={styles.paymentButtonsContainer}>
-              <PaymentButton
-                onPress={() => {
-                  setSelectedPaymentMethod('Apple Pay');
-                  console.log('Apple Pay selected');
-                }}
-                logo={require('@/assets/images/applepaylogo.png')}
-                style={styles.applePayButton}
-                testID="apple-pay-button"
-              />
-
-              <PaymentButton
-                onPress={() => {
-                  setSelectedPaymentMethod('Google Pay');
-                  console.log('Google Pay selected');
-                }}
-                logo={require('@/assets/images/googlepaylogo.svg.png')}
-                style={styles.googlePayButton}
-                testID="google-pay-button"
-              />
-
-              <PaymentButton
-                onPress={() => {
-                  setSelectedPaymentMethod('Venmo');
-                  console.log('Venmo selected');
-                }}
-                logo={require('@/assets/images/Venmo_logo.png')}
-                style={styles.venmoButton}
-                testID="venmo-button"
-              />
-
-              <PaymentButton
-                onPress={() => {
-                  setSelectedPaymentMethod('Credit Card');
-                  console.log('Credit Card selected');
-                }}
-                logo={require('@/assets/images/6963703.png')}
-                style={styles.creditCardButton}
-                testID="credit-card-button"
-              />
-            </View>
-
-            <Text style={styles.modalSubtitle}>Total: $6.52</Text>
-            <Button title="Back to Order Total" onPress={backtoOrderTotal} color="blue" />
-            <Button 
-              title="Complete Payment" 
-              onPress={handleCompletePayment}
-              color="green"
-              disabled={!selectedPaymentMethod}
-            />
-            <Button title="Cancel" onPress={closePaymentMethodModal} color="red" />
-          </View>
-        </View>
-      </Modal>
+<Modal
+  animationType="slide"
+  transparent={true}
+  visible={isPaymentMethodModalVisible}
+  onRequestClose={closePaymentMethodModal}
+>
+  <View style={styles.modalContainer}>
+    <View style={styles.modalContent}>
+      <Text style={styles.modalText}>Select Payment Method</Text>
+      
+      <View style={styles.paymentButtonsContainer}>
+        <PaymentButton
+          onPress={() => {
+            setSelectedPaymentMethod('Apple Pay');
+            console.log('Apple Pay selected');
+          }}
+          logo={require('@/assets/images/applepaylogo.png')}
+          style={styles.applePayButton}
+          testID="apple-pay-button"
+        />
+        <PaymentButton
+          onPress={() => {
+            setSelectedPaymentMethod('Google Pay');
+            console.log('Google Pay selected');
+          }}
+          logo={require('@/assets/images/googlepaylogo.svg.png')}
+          style={styles.googlePayButton}
+          testID="google-pay-button"
+        />
+        <PaymentButton
+          onPress={() => {
+            setSelectedPaymentMethod('Venmo');
+            console.log('Venmo selected');
+          }}
+          logo={require('@/assets/images/Venmo_logo.png')}
+          style={styles.venmoButton}
+          testID="venmo-button"
+        />
+        <PaymentButton
+          onPress={() => {
+            setSelectedPaymentMethod('Credit Card');
+            console.log('Credit Card selected');
+          }}
+          logo={require('@/assets/images/6963703.png')}
+          style={styles.creditCardButton}
+          testID="credit-card-button"
+        />
+      </View>
+      
+      <Text style={styles.totalText}>Total: $6.52</Text>
+      
+      <TouchableOpacity 
+        style={[styles.touchableButton, styles.backButton1]} 
+        onPress={backtoOrderTotal}
+      >
+        <Text style={styles.buttonText1}>Back to Order Total</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity
+        style={[
+          styles.touchableButton, 
+          styles.payButton1,
+          !selectedPaymentMethod && { opacity: 0.5 }
+        ]}
+        onPress={handleCompletePayment}
+        disabled={!selectedPaymentMethod}
+      >
+        <Text style={styles.buttonText1}>Complete Payment</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity 
+        style={[styles.touchableButton, styles.payButton1, { backgroundColor: '#FF3B30' }]} 
+        onPress={closePaymentMethodModal}
+      >
+        <Text style={styles.buttonText1}>Cancel</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
 
       {/* Payment Confirmation Modal */}
       <Modal
@@ -474,4 +490,50 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+
+  buttonGroup: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 10,
+    marginTop: 15,
+  },
+  
+  condensedButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    minWidth: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+
+  backButton1: {
+    width: '35%',
+    backgroundColor: '#007AFF',
+  },
+
+  payButton1: {
+    width: '35%',
+    backgroundColor: '#34C759',
+  },
+
+  buttonText1: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
+  totalText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  }
 });
