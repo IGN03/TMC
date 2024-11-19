@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 // TODO set up secrets for connection string
 
-const uri = process.env.ATLAS_URI
+const uri = process.env.ATLAS_URI;
 
 const client = new MongoClient(uri, {
     serverApi: {
@@ -68,6 +68,8 @@ async function getAllMenuItems(query={}){
     return result   
 }
 
+app.post("/menuItem", async (req, res) => {
+  const newMenuItem = new MenuItem(req.body);
 
 app.get('/menuItems', async (req, res) => {
     const query = req.query;
@@ -222,6 +224,8 @@ async function getAllAccounts(query={}){
     return result   
 }
 
+app.post("/order", async (req, res) => {
+  const newOrder = new Order(req.body);
 
 app.get('/accounts', async (req, res) => {
     const query = req.query;
@@ -263,9 +267,6 @@ app.put('/accounts', async (req, res) => {
         res.status(500).json({ error: 'Failed to update menu item' });
     }
 });
-
-
-
 
 async function postPickupLocations(body){
     const result = await pickupLocations.insertOne(body);
