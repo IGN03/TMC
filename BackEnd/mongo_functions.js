@@ -354,6 +354,10 @@ app.post('/activateLocation', async (req, res) => {
         if(!req.body._id){
             res.status(400).json({error: 'Missing _id field'})
         } else {
+            const idString = req.body._id;
+            if (!ObjectId.isValid(idString) || idString.length !== 24) {
+                return res.status(400).json({ error: 'Invalid _id format' });
+            }
             const idToActivate = {_id : new ObjectId(req.body._id)} 
             const pickupLocation = await ActivatePickupLocation(idToActivate);
             res.status(201).json({ message: 'active location changed', pickupLocation });
