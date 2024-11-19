@@ -72,7 +72,12 @@ async function getAllMenuItems(query={}){
 app.get('/menuItems', async (req, res) => {
     const query = req.query;
     if(query._id){
-        query._id = new ObjectId(query._id)
+        const idString = query._id;
+        if (!ObjectId.isValid(idString) || idString.length !== 24) {
+            res.status(400).json({ error: 'Invalid _id format' });
+            return
+        }
+        query._id = new ObjectId(idString)
     }
 
     try {
@@ -98,7 +103,12 @@ app.put('/menuItems', async (req, res) => {
     const query = req.query
 
     if(query._id){
-        query._id = new ObjectId(query._id)
+        const idString = query._id;
+        if (!ObjectId.isValid(idString) || idString.length !== 24) {
+            res.status(400).json({ error: 'Invalid _id format' });
+            return
+        }
+        query._id = new ObjectId(idString)
     }
 
     try {
@@ -149,7 +159,12 @@ async function getAllOrders(query={}){
 app.get('/orders', async (req, res) => {
     const query = req.query;
     if(query._id){
-        query._id = new ObjectId(query._id)
+        const idString = query._id;
+        if (!ObjectId.isValid(idString) || idString.length !== 24) {
+            res.status(400).json({ error: 'Invalid _id format' });
+            return
+        }
+        query._id = new ObjectId(idString)
     }
 
     try {
@@ -175,7 +190,12 @@ app.put('/orders', async (req, res) => {
     const query = req.query
 
     if(query._id){
-        query._id = new ObjectId(query._id)
+        const idString = query._id;
+        if (!ObjectId.isValid(idString) || idString.length !== 24) {
+            res.status(400).json({ error: 'Invalid _id format' });
+            return
+        }
+        query._id = new ObjectId(idString)
     }
 
     try {
@@ -226,7 +246,12 @@ async function getAllAccounts(query={}){
 app.get('/accounts', async (req, res) => {
     const query = req.query;
     if(query._id){
-        query._id = new ObjectId(query._id)
+        const idString = query._id;
+        if (!ObjectId.isValid(idString) || idString.length !== 24) {
+            res.status(400).json({ error: 'Invalid _id format' });
+            return
+        }
+        query._id = new ObjectId(idString)
     }
 
     try {
@@ -252,7 +277,12 @@ app.put('/accounts', async (req, res) => {
     const query = req.query
 
     if(query._id){
-        query._id = new ObjectId(query._id)
+        const idString = query._id;
+        if (!ObjectId.isValid(idString) || idString.length !== 24) {
+            res.status(400).json({ error: 'Invalid _id format' });
+            return
+        }
+        query._id = new ObjectId(idString)
     }
 
     try {
@@ -263,7 +293,6 @@ app.put('/accounts', async (req, res) => {
         res.status(500).json({ error: 'Failed to update menu item' });
     }
 });
-
 
 
 
@@ -303,7 +332,12 @@ async function getAllPickupLocations(query={}){
 app.get('/pickupLocations', async (req, res) => {
     const query = req.query;
     if(query._id){
-        query._id = new ObjectId(query._id)
+        const idString = query._id;
+        if (!ObjectId.isValid(idString) || idString.length !== 24) {
+            res.status(400).json({ error: 'Invalid _id format' });
+            return
+        }
+        query._id = new ObjectId(idString)
     }
 
     try {
@@ -329,7 +363,12 @@ app.put('/pickupLocations', async (req, res) => {
     const query = req.query
 
     if(query._id){
-        query._id = new ObjectId(query._id)
+        const idString = query._id;
+        if (!ObjectId.isValid(idString) || idString.length !== 24) {
+            res.status(400).json({ error: 'Invalid _id format' });
+            return
+        }
+        query._id = new ObjectId(idString)
     }
 
     try {
@@ -385,12 +424,20 @@ app.post('/orderFromCart', async(req, res) => {
     const query = req.query
     const body = req.body
     try {
+        // Check for valid object id format
+        const idString = query._id;
+        if (!ObjectId.isValid(idString) || idString.length !== 24) {
+            console.log("invalidId")
+            res.status(400).json({ error: 'Invalid _id format' });
+            return
+        }
+
         if (!query._id ||  !body.pickupLocation || !body.tip){
             res.status(400).json({error: 'Missing required fields field'})
         }
         else{
             // get the cart from the account
-            query._id = new ObjectId(query._id)
+            query._id = new ObjectId(idString)
             const foundAccount = await getAllAccounts(query);
             cart = foundAccount[0].cart
             if (cart.length< 1){
