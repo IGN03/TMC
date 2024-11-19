@@ -363,6 +363,13 @@ async function testActivateLocation(){
     assert.strictEqual(result.foundItems[0].active, true )
 }
 
+async function testActivateLocationWithBadId(){
+    result = await postData(BASE_URL + '/activateLocation', {_id: "abababab"})
+    assert.strictEqual(result.error, "Invalid _id format" )
+    result = await postData(BASE_URL + '/activateLocation', {_id: "qwertyuioplkjhgfdsazxcvb"})
+    assert.strictEqual(result.error, "Invalid _id format" )
+}
+
 
 // add 3 menu Items and return thier Ids
 async function fillMenuItems(){
@@ -477,6 +484,7 @@ async function runTests(){
     await testUpdatePickupLocation() 
     await testActivateLocation()
     await testOrderFromCart()
+    await testActivateLocationWithBadId()
     console.log("all tests passed")
     //await clearTestDB()
 }

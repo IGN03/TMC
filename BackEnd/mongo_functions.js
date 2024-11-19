@@ -56,6 +56,7 @@ app.post('/menuItems', async (req, res) => {
         res.status(201).json({ message: 'item added successfully', item });
         return item
     } catch (error) {
+        console.log("Error: " + error)
         res.status(500).json({ error: 'Failed to add item' });
     }
 });
@@ -79,6 +80,7 @@ app.get('/menuItems', async (req, res) => {
         res.status(201).json({ message: 'items grabbed', foundItems });
         return foundItems;
     } catch (error) {
+        console.log("Error: " + error)
         res.status(500).json({ error: 'Failed to get items' });
     }
 });
@@ -131,6 +133,7 @@ app.post('/orders', async (req, res) => {
         res.status(201).json({ message: 'item added successfully', item });
         return item
     } catch (error) {
+        console.log("Error: " + error)
         res.status(500).json({ error: 'Failed to add item' });
     }
 });
@@ -154,6 +157,7 @@ app.get('/orders', async (req, res) => {
         res.status(201).json({ message: 'items grabbed', foundItems });
         return foundItems;
     } catch (error) {
+        console.log("Error: " + error)
         res.status(500).json({ error: 'Failed to get items' });
     }
 });
@@ -206,6 +210,7 @@ app.post('/accounts', async (req, res) => {
         res.status(201).json({ message: 'item added successfully', item });
         return item
     } catch (error) {
+        console.log("Error: " + error)
         res.status(500).json({ error: 'Failed to add item' });
     }
 });
@@ -229,6 +234,7 @@ app.get('/accounts', async (req, res) => {
         res.status(201).json({ message: 'items grabbed', foundItems });
         return foundItems;
     } catch (error) {
+        console.log("Error: " + error)
         res.status(500).json({ error: 'Failed to get items' });
     }
 });
@@ -281,6 +287,7 @@ app.post('/pickupLocations', async (req, res) => {
         res.status(201).json({ message: 'item added successfully', item });
         return item
     } catch (error) {
+        console.log("Error: " + error)
         res.status(500).json({ error: 'Failed to add item' });
     }
 });
@@ -304,6 +311,7 @@ app.get('/pickupLocations', async (req, res) => {
         res.status(201).json({ message: 'items grabbed', foundItems });
         return foundItems;
     } catch (error) {
+        console.log("Error: " + error)
         res.status(500).json({ error: 'Failed to get items' });
     }
 });
@@ -346,6 +354,10 @@ app.post('/activateLocation', async (req, res) => {
         if(!req.body._id){
             res.status(400).json({error: 'Missing _id field'})
         } else {
+            const idString = req.body._id;
+            if (!ObjectId.isValid(idString) || idString.length !== 24) {
+                return res.status(400).json({ error: 'Invalid _id format' });
+            }
             const idToActivate = {_id : new ObjectId(req.body._id)} 
             const pickupLocation = await ActivatePickupLocation(idToActivate);
             res.status(201).json({ message: 'active location changed', pickupLocation });
