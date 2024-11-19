@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Image, StyleSheet, View, Modal, FlatList, ScrollView, TouchableOpacity } from 'react-native';
+import { Image, StyleSheet, View, Modal, FlatList, ScrollView, TouchableOpacity, Text } from 'react-native';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { useIsFocused, useNavigation } from '@react-navigation/native'
+import { createStackNavigator } from '@react-navigation/stack';
+import { useIsFocused, useNavigation, NavigationContainer } from '@react-navigation/native'
 import Icon from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
 
@@ -14,9 +15,11 @@ const MenuItem = ({ itemId, itemName, itemDescription, itemPrice, itemImage, ite
   <ThemedView style={styles.itemContainer}>
     <View style={styles.textContainer}>
       <ThemedText type="defaultSemiBold">{itemName}</ThemedText>
-      <ThemedText>{itemDescription}</ThemedText>
-      {itemAllergen && <ThemedText>Allergens: {itemAllergen}</ThemedText>}
-      <ThemedText>Price: ${Number(itemPrice).toFixed(2)}</ThemedText>
+      <ThemedText>Description: {itemDescription}</ThemedText>
+      {itemAllergen && <ThemedText>
+      <Text style={{ textDecorationLine: 'underline' }}>Allergens:</Text> {itemAllergen} 
+      </ThemedText>}
+      <ThemedText type="defaultSemiBold">${Number(itemPrice).toFixed(2)}</ThemedText>
       
       <View style={styles.quantityContainer}>
         <TouchableOpacity style={styles.button} onPress={() => onQuantityChange(itemId, -1)}>
@@ -67,7 +70,7 @@ export default function MenuScreen() {
         });
         setQuantities(initialQuantities);
 
-        /* Categorize items
+        // Categorize items
         const categorized = 
         {
           appetizers: items.filter(item => item.category === 'Appetizer'),
@@ -76,7 +79,6 @@ export default function MenuScreen() {
         };
         console.log('Categorized items:', categorized);
         setCategorizedItems(categorized);
-        */
       } 
       
       catch (error) 
@@ -157,10 +159,8 @@ export default function MenuScreen() {
   };
 
 // Sidebar component in MenuScreen
-const Sidebar = ({ cart, isVisible, onClose }) => 
-{
-  const navigation = useNavigation();
-  
+const Sidebar = ({ cart, isVisible, onClose, navigation }) => 
+{ 
   const closeAndNavigate = () => 
   {
     onClose();
@@ -238,6 +238,7 @@ const Sidebar = ({ cart, isVisible, onClose }) =>
           onClose={() => setIsSidebarVisible(false)}
           isVisible={isSidebarVisible}
           cart={cart}
+          navigation={navigation}
         />
       )}
 
@@ -263,7 +264,7 @@ const Sidebar = ({ cart, isVisible, onClose }) =>
           {/* Appetizers Section */}
           <ThemedView style={styles.sectionContainer}>
             <ThemedText style={styles.subtitle} type="subtitle">Appetizers</ThemedText>
-            {menuItems.map((item) => (
+            {categorizedItems.appetizers.map((item) => (
               <MenuItem
                 key={item._id}
                 itemId={item._id}
@@ -282,7 +283,7 @@ const Sidebar = ({ cart, isVisible, onClose }) =>
           {/* Main Dishes Section */}
           <ThemedView style={styles.sectionContainer}>
             <ThemedText style={styles.subtitle} type="subtitle">Main Dishes</ThemedText>
-            {menuItems.map((item) => (
+            {categorizedItems.mainDishes.map((item) => (
               <MenuItem
                 key={item._id}
                 itemId={item._id}
@@ -301,7 +302,7 @@ const Sidebar = ({ cart, isVisible, onClose }) =>
           {/* Desserts Section */}
           <ThemedView style={styles.sectionContainer}>
             <ThemedText style={styles.subtitle} type="subtitle">Desserts</ThemedText>
-            {menuItems.map((item) => (
+            {categorizedItems.desserts.map((item) => (
               <MenuItem
                 key={item._id}
                 itemId={item._id}
@@ -361,6 +362,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   divider: {
+    top: 5,
     height: 3, 
     backgroundColor: '#ccc', 
     marginVertical: 10, 
