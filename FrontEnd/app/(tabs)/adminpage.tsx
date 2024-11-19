@@ -10,6 +10,7 @@ interface MenuItem {
   name: string;
   price: number;
   allergen: string;
+  category: string;
   description: string;
 }
 
@@ -17,6 +18,7 @@ interface MenuItemFormData {
   name: string;
   price: number;
   allergen: string;
+  category: string;
   description: string;
 }
 
@@ -26,6 +28,7 @@ const AdminPage = () => {
     name: '', 
     price: 0, 
     allergen: '',
+    category: '',
     description: '' 
   });
   const [editMode, setEditMode] = useState(false);
@@ -80,6 +83,7 @@ const AdminPage = () => {
         name: newMenuItem.name,
         price: newMenuItem.price,
         allergen: newMenuItem.allergen,
+        category: newMenuItem.category,
         description: newMenuItem.description,
       };
 
@@ -97,7 +101,7 @@ const AdminPage = () => {
   };
 
   const resetForm = () => {
-    setNewMenuItem({ name: '', price: 0, allergen: '', description: '' });
+    setNewMenuItem({ name: '', price: 0, allergen: '',category: '', description: '' });
     setEditMode(false);
     setSelectedItem(null);
   };
@@ -112,6 +116,7 @@ const AdminPage = () => {
       name: item.name, 
       price: item.price, 
       allergen: item.allergen,
+      category: item.category,
       description: item.description 
     });
     
@@ -184,6 +189,14 @@ const AdminPage = () => {
                     />
                     <TextInput
                       style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
+                      placeholder="Category"
+                      placeholderTextColor={colors.placeholderText}
+                      value={newMenuItem.category}
+                      onChangeText={(text) => setNewMenuItem({...newMenuItem, category: text})}
+                      autoCapitalize="none"
+                    />
+                    <TextInput
+                      style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
                       placeholder="Description"
                       placeholderTextColor={colors.placeholderText}
                       value={newMenuItem.description}
@@ -202,6 +215,7 @@ const AdminPage = () => {
                   <View style={styles.menuItem}>
                     <Text style={styles.itemName}>{item.name} - ${item.price.toFixed(2)}</Text>
                     <Text style={styles.itemDescription}>{item.description}</Text>
+                    <Text style={styles.itemDescription}>{item.category}</Text>
                     <Button
                       title="Edit"
                       onPress={() => selectItemForEditing(item)}
