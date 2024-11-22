@@ -39,6 +39,20 @@ const PaymentButton = ({
   );
 };
 
+// Calculate order totals
+const calculateOrderTotals = (cart) => {
+  const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const taxRate = 0.08875; // 8.875% tax rate
+  const tax = subtotal * taxRate;
+  const total = subtotal + tax;
+
+  return {
+    subtotal: subtotal.toFixed(2),
+    tax: tax.toFixed(2),
+    total: total.toFixed(2)
+  };
+};
+
 export default function CartScreen() {
   const [isCartModalVisible, setCartModalVisible] = useState(false);
   const [isNewModalVisible, setIsNewModalVisible] = useState(false);
@@ -46,6 +60,7 @@ export default function CartScreen() {
   const [isPaymentConfirmationModalVisible, setIsPaymentConfirmationModalVisible] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const [cart, setCart] = useState([]);
+  const { subtotal, tax, total } = calculateOrderTotals(cart);
   const isFocused = useIsFocused();
   const navigation = useNavigation();
 
@@ -108,7 +123,6 @@ export default function CartScreen() {
     setSelectedPaymentMethod('');
   };
 
-  
 
   return (
     <ThemedView style={{ flex: 1 }}>
@@ -191,11 +205,11 @@ export default function CartScreen() {
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          <Text style={styles.modalText}>Order Total: </Text>
-          <Text style={styles.modalSubtitle}>Subtotal: $5.99 </Text>
-          <Text style={styles.modalSubtitle}>Tax: $0.53 </Text>
-          <Text style={styles.modalSubtitle}>Total: $6.52 </Text>
-          <Text style={styles.modalSubtitle}> </Text>
+        <Text style={styles.modalText}>Order Total: </Text>
+        <Text style={styles.modalSubtitle}>Subtotal: ${subtotal}</Text>
+        <Text style={styles.modalSubtitle}>Tax: ${tax}</Text>
+        <Text style={styles.modalSubtitle}>Total: ${total}</Text>
+        <Text style={styles.modalSubtitle}> </Text>
           <Image source={require('@/assets/images/TMC_Logo.png')} style={styles.tmcLogo} />
           
           <TouchableOpacity 
@@ -265,7 +279,7 @@ export default function CartScreen() {
         />
       </View>
       
-      <Text style={styles.totalText}>Total: $6.52</Text>
+      <Text style={styles.totalText}>Total: ${total}</Text>
       
       <TouchableOpacity 
         style={[styles.touchableButton, styles.backButton1]} 
@@ -307,7 +321,7 @@ export default function CartScreen() {
     <View style={styles.modalContent}>
       <Text style={styles.modalText}>Payment Confirmation</Text>
       <Text style={styles.modalSubtitle}>Order #12345</Text>
-      <Text style={styles.modalSubtitle}>Total Paid: $6.52</Text>
+      <Text style={styles.modalSubtitle}>Total Paid: ${total}</Text>
       <Text style={styles.modalSubtitle}>Payment Method: {selectedPaymentMethod}</Text>
       <Text style={styles.modalSubtitle}>Date: {new Date().toLocaleDateString()}</Text>
       <Text style={styles.modalSubtitle}> </Text>
