@@ -68,8 +68,6 @@ async function getAllMenuItems(query={}){
     return result   
 }
 
-app.post("/menuItem", async (req, res) => {
-  const newMenuItem = new MenuItem(req.body);
 
 app.get('/menuItems', async (req, res) => {
     const query = req.query;
@@ -244,8 +242,6 @@ async function getAllAccounts(query={}){
     return result   
 }
 
-app.post("/order", async (req, res) => {
-  const newOrder = new Order(req.body);
 
 app.get('/accounts', async (req, res) => {
     const query = req.query;

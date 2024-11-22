@@ -36,8 +36,6 @@ function testCreateMenuItem(){
     assert.strictEqual(item.category, exampleItem.category, "category should equal exampleItem.category");
 }
 
-function testCreateEmptyMenuItem() {
-  const menuItem = new MenuItem({});
 
 function testCreateEmptyMenuItem(){
     const item = new MenuItem({});
@@ -158,8 +156,6 @@ function testCreateAccount(){
     assert.strictEqual(areArraysEqual(item.cart, exampleItem.cart), true ); 
 }
 
-function testCreateEmptyAccount() {
-  const account = new Account({});
 
 function testCreateEmptyAccount(){
     const item = new Account({});
