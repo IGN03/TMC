@@ -158,6 +158,12 @@ export default function MenuScreen() {
     setIsSidebarVisible(true);
   };
 
+  // Function that handles removing entire items from the cart
+  const handleRemoveFromCart = (itemId) => 
+  {
+    setCart(prevCart => prevCart.filter(item => item._id !== itemId));
+  };
+
 // Sidebar component in MenuScreen
 const Sidebar = ({ cart, isVisible, onClose, navigation }) => 
 { 
@@ -189,6 +195,12 @@ const Sidebar = ({ cart, isVisible, onClose, navigation }) =>
                       ${(item.price * item.quantity).toFixed(2)}
                     </ThemedText>
                   </View>
+                  <TouchableOpacity
+                        style={styles.removeButton}
+                        onPress={() => handleRemoveFromCart(item._id)}
+                  >
+                    <Icon name="trash" size={20} color="#FF0000" />
+                  </TouchableOpacity>
                 </View>
               ))
             ) : (
@@ -200,7 +212,7 @@ const Sidebar = ({ cart, isVisible, onClose, navigation }) =>
             <View style={styles.totalsContainer}>
               <ThemedText>Subtotal: ${subtotal.toFixed(2)}</ThemedText>
               <ThemedText>Tax: ${tax.toFixed(2)}</ThemedText>
-              <ThemedText type="defaultSemiBold">
+              <ThemedText style={styles.totalText}>
                 Total: ${total.toFixed(2)}
               </ThemedText>
             </View>
@@ -404,6 +416,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  removeButton: {
+    bottom: 3,
+  },
   fixedButtonContainer: {
   position: 'absolute',
   bottom: 0,
@@ -478,6 +493,7 @@ const styles = StyleSheet.create({
   },
   item: {
     top: 20,
+    left: 20,
   },
   // For Sidebar Text and Icons
   closeButton: {
@@ -495,6 +511,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#e5dccf',
   },
+  totalText: {
+    fontWeight: 'bold',
+  },
   cartItemContainer: {
     marginBottom: 15,
   },
@@ -508,10 +527,11 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   cartItemPrice: {
+    fontWeight: 'bold',
     fontSize: 16,
     textAlign: 'right',
     width: 100,
-    top: 18,
+    top: 17,
   },
   bottomPadding: {
     height: 60,
