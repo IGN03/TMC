@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '80%',
     padding: 20,
-    backgroundColor: 'gray',
+    backgroundColor: 'black',
     borderRadius: 10,
     alignItems: 'center',
   },
