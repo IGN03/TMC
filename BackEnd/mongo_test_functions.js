@@ -36,8 +36,7 @@ async function fetchData(url, query="") {
             method: 'GET', 
         });
 
-        if (!response.ok) {
-            console.log(response.status)
+        if (!response) {
             throw new Error('Network response was not ok');
         }
 
@@ -135,6 +134,19 @@ async function testUpdateMenuItem(){
 }
 
 
+async function testMenuItemWithBadId(){
+    const url = BASE_URL + '/menuItems';
+    result = await fetchData(url + '?_id='+ "abababab")
+    assert.strictEqual(result.error, "Invalid _id format" )
+    result = await fetchData(url + '?_id='+ "qwertyuioplkjhgfdsazxcvb")
+    assert.strictEqual(result.error, "Invalid _id format" )
+    await updateData(url + '?_id='+ "abababab", {})
+    assert.strictEqual(result.error, "Invalid _id format" )
+    await updateData(url + '?_id='+ "qwertyuioplkjhgfdsazxcvb", {})
+    assert.strictEqual(result.error, "Invalid _id format" )
+}
+
+
 
 async function testPostOrder(){
     const url = BASE_URL + '/orders';
@@ -207,6 +219,19 @@ async function testUpdateOrder(){
 }
 
 
+async function testOrderWithBadId(){
+    const url = BASE_URL + '/orders';
+    result = await fetchData(url + '?_id='+ "abababab")
+    assert.strictEqual(result.error, "Invalid _id format" )
+    result = await fetchData(url + '?_id='+ "qwertyuioplkjhgfdsazxcvb")
+    assert.strictEqual(result.error, "Invalid _id format" )
+    await updateData(url + '?_id='+ "abababab", {})
+    assert.strictEqual(result.error, "Invalid _id format" )
+    await updateData(url + '?_id='+ "qwertyuioplkjhgfdsazxcvb", {})
+    assert.strictEqual(result.error, "Invalid _id format" )
+}
+
+
 async function testPostAccount(){
     const url = BASE_URL + '/accounts';
     const body = {  
@@ -276,6 +301,19 @@ async function testUpdateAccount(){
 }
 
 
+async function testAccountWithBadId(){
+    const url = BASE_URL + '/accounts';
+    result = await fetchData(url + '?_id='+ "abababab")
+    assert.strictEqual(result.error, "Invalid _id format" )
+    result = await fetchData(url + '?_id='+ "qwertyuioplkjhgfdsazxcvb")
+    assert.strictEqual(result.error, "Invalid _id format" )
+    await updateData(url + '?_id='+ "abababab", {})
+    assert.strictEqual(result.error, "Invalid _id format" )
+    await updateData(url + '?_id='+ "qwertyuioplkjhgfdsazxcvb", {})
+    assert.strictEqual(result.error, "Invalid _id format" )
+}
+
+
 async function testPostPickupLocaion(){
     const url = BASE_URL + '/pickupLocations';
     const body = {  
@@ -331,6 +369,19 @@ async function testUpdatePickupLocation(){
     assert.strictEqual(result.foundItems[0].contactInfo, updateItem.contactInfo)
     assert.strictEqual(result.foundItems[0].name, updateItem.name)
     assert.strictEqual(result.foundItems[0].active, true)
+}
+
+
+async function testPickupLocationWithBadId(){
+    const url = BASE_URL + '/pickupLocations';
+    result = await fetchData(url + '?_id='+ "abababab")
+    assert.strictEqual(result.error, "Invalid _id format" )
+    result = await fetchData(url + '?_id='+ "qwertyuioplkjhgfdsazxcvb")
+    assert.strictEqual(result.error, "Invalid _id format" )
+    await updateData(url + '?_id='+ "abababab", {})
+    assert.strictEqual(result.error, "Invalid _id format" )
+    await updateData(url + '?_id='+ "qwertyuioplkjhgfdsazxcvb", {})
+    assert.strictEqual(result.error, "Invalid _id format" )
 }
 
 
@@ -436,7 +487,14 @@ async function testOrderFromCart(){
     assert.strictEqual(result.foundItems[0].items[0]._id,  account.menu[0]._id )
     assert.strictEqual(result.foundItems[0].items[1]._id,  account.menu[1]._id )
     assert.strictEqual(result.foundItems[0].items[2]._id,  account.menu[2]._id )
+}
 
+
+async function testOrderFromCartnWithBadId(){
+    result = await postData(BASE_URL + '/orderFromCart' + '?_id=' + "abababab")
+    assert.strictEqual(result.error, "Invalid _id format" )
+    result = await postData(BASE_URL + '/orderFromCart' +'?_id=' + "qwertyuioplkjhgfdsazxcvb")
+    assert.strictEqual(result.error, "Invalid _id format" )
 }
 
 async function clearTestDB(){
@@ -466,25 +524,37 @@ async function clearTestDB(){
 async function runTests(){
     // We only want to run the tests on the test database 
     assert.strictEqual(process.env.DATABASE, TEST_DB)
+
     await testPostMenuItem()
     await testPostEmptyMenuItem()
     await testPostIncompleteMenuItem()
     await testUpdateMenuItem()
+    await testMenuItemWithBadId()
+
     await testPostOrder()
     await testPostEmptyOrder()
     await testPostIncompleteOrder()
     await testUpdateOrder()
+    await testOrderWithBadId()
+
+
     await testPostAccount()
     await testPostEmptyAccount()
     await testPostIncompleteAccount()
     await testUpdateAccount()
+    await testAccountWithBadId()
+
     await testPostPickupLocaion()
     await testPostEmptyPickupLocation()
     await testPostIncompletePickupLocation()
     await testUpdatePickupLocation() 
+    await testPickupLocationWithBadId()
+
     await testActivateLocation()
-    await testOrderFromCart()
     await testActivateLocationWithBadId()
+
+    await testOrderFromCart() 
+    await testOrderFromCartnWithBadId()
     console.log("all tests passed")
     //await clearTestDB()
 }
