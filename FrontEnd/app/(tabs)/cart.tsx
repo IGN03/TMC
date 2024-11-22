@@ -298,29 +298,38 @@ export default function CartScreen() {
 
       {/* Payment Confirmation Modal */}
       <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isPaymentConfirmationModalVisible}
-        onRequestClose={handleDone}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalText}>Payment Confirmation</Text>
-            <Text style={styles.modalSubtitle}>Order #12345</Text>
-            <Text style={styles.modalSubtitle}>Total Paid: $6.52</Text>
-            <Text style={styles.modalSubtitle}>Payment Method: {selectedPaymentMethod}</Text>
-            <Text style={styles.modalSubtitle}>Date: {new Date().toLocaleDateString()}</Text>
-            <Text style={styles.modalSubtitle}> </Text>
-            <Image source={require('@/assets/images/TMC_Logo.png')} style={styles.tmcLogo} />
-            <Text style={[styles.modalSubtitle, styles.successMessage]}>
-              Payment Successful! Thank you for your order.
-            </Text>
-            <Text style={styles.modalSubtitle}>
-              Your order will be ready for pickup in approximately 15-20 minutes.
-            </Text>
-            <Button title="Done" onPress={handleDone} color="green" />
-          </View>
-        </View>
-      </Modal>
+  animationType="slide"
+  transparent={true}
+  visible={isPaymentConfirmationModalVisible}
+  onRequestClose={handleDone}
+>
+  <View style={styles.modalContainer}>
+    <View style={styles.modalContent}>
+      <Text style={styles.modalText}>Payment Confirmation</Text>
+      <Text style={styles.modalSubtitle}>Order #12345</Text>
+      <Text style={styles.modalSubtitle}>Total Paid: $6.52</Text>
+      <Text style={styles.modalSubtitle}>Payment Method: {selectedPaymentMethod}</Text>
+      <Text style={styles.modalSubtitle}>Date: {new Date().toLocaleDateString()}</Text>
+      <Text style={styles.modalSubtitle}> </Text>
+      
+      <Image source={require('@/assets/images/TMC_Logo.png')} style={styles.tmcLogo} />
+      <Text style={[styles.modalSubtitle, styles.successMessage]}>
+        Payment Successful! Thank you for your order.
+      </Text>
+      <Text style={styles.modalSubtitle}>
+        Your order will be ready for pickup in approximately 15-20 minutes.
+      </Text>
+      
+      <TouchableOpacity 
+        onPress={handleDone}
+        style={styles.doneButton}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.doneButtonText}>Done</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
      
     </ThemedView>
   );
@@ -535,5 +544,20 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
-  }
+  },
+  
+  doneButton: {
+    backgroundColor: 'green',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    marginTop: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  doneButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
