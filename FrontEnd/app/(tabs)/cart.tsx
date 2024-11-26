@@ -7,12 +7,15 @@ import {
   Text, 
   TouchableOpacity, 
   Button,
+  Linking,
+  Alert,
   Platform 
 } from 'react-native';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import axios from 'axios';
 
 // Custom PaymentButton component
 const PaymentButton = ({ 
@@ -39,19 +42,7 @@ const PaymentButton = ({
   );
 };
 
-// Calculate order totals
-const calculateOrderTotals = (cart) => {
-  const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-  const taxRate = 0.08875; // 8.875% tax rate
-  const tax = subtotal * taxRate;
-  const total = subtotal + tax;
 
-  return {
-    subtotal: subtotal.toFixed(2),
-    tax: tax.toFixed(2),
-    total: total.toFixed(2)
-  };
-};
 
 export default function CartScreen() {
   const [isCartModalVisible, setCartModalVisible] = useState(false);
@@ -60,10 +51,9 @@ export default function CartScreen() {
   const [isPaymentConfirmationModalVisible, setIsPaymentConfirmationModalVisible] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const [cart, setCart] = useState([]);
-  const { subtotal, tax, total } = calculateOrderTotals(cart);
   const isFocused = useIsFocused();
   const navigation = useNavigation();
-
+  const url = 'http://localhost:3000';
   const isCartEmpty = cart.length === 0;
 
   useEffect(() => {
@@ -117,12 +107,113 @@ export default function CartScreen() {
       setIsPaymentMethodModalVisible(false);
       setIsPaymentConfirmationModalVisible(true);
     }
+    const handlePayment = async () => {
+      try {
+        // Validate selected payment method
+        if (!selectedPaymentMethod) {
+          Alert.alert('Error', 'Please select a payment method');
+          return;
+        }
+    
+        // Configuration for Square API call
+        const accessToken = 'Bearer EAAAl7bENyO2IwLTbpGL89p7qWt6p1A6C6AXjph8GtfoeYievQUUrespkltM-hh3'; // Replace with actual token
+        const locationId = 'LAWPABWTGF5CK'; // Replace with actual location ID
+        const orderAmount = 652; // $6.52 in cents
+    
+        // Generate a unique idempotency key to prevent duplicate transactions
+        const idempotencyKey = `order-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    
+        // Construct the payload for the Square API
+        const payload = {
+          idempotency_key: idempotencyKey,
+          quick_pay: {
+            name: 'TMC Order',
+            price_money: {
+              amount: orderAmount,
+              currency: 'USD'
+            },
+            location_id: locationId
+          },
+          checkout_options: {
+            accepted_payment_methods: {
+              apple_pay: selectedPaymentMethod === 'Apple Pay',
+              google_pay: selectedPaymentMethod === 'Google Pay',
+              card_present: selectedPaymentMethod === 'Credit Card',
+            }
+          }
+        };
+    
+        // Make the API call to Square using fetch
+        const response = await fetch(
+          'https://connect.squareup.com/v2/online-checkout/payment-links',
+          {
+            method: 'POST',
+            headers: {
+              'Square-Version': '2024-11-20',
+              'Authorization': accessToken,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          }
+        );
+    
+        // Check if the response is okay
+        if (!response.ok) {
+          const errorBody = await response.text();
+          throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
+        }
+    
+        // Parse the JSON response
+        const data = await response.json();
+    
+        // Validate the response
+        if (!data || !data.payment_link || !data.payment_link.url) {
+          throw new Error('Invalid response from Square');
+        }
+    
+        const paymentUrl = data.payment_link.url;
+        
+        // Open the payment URL based on platform
+        if (Platform.OS === 'ios' || Platform.OS === 'android') {
+          try {
+            const supported = await Linking.canOpenURL(paymentUrl);
+            
+            if (supported) {
+              await Linking.openURL(paymentUrl);
+            } else {
+              throw new Error('Cannot open payment link');
+            }
+          } catch (linkError) {
+            console.error('Linking error:', linkError);
+            Alert.alert('Error', 'Unable to open payment link. Please try again.');
+            return;
+          }
+        } else {
+          // Fallback for web or other platforms
+          window.open(paymentUrl, '_blank');
+        }
+    
+        // Close payment method modal and show confirmation
+        setIsPaymentMethodModalVisible(false);
+        setIsPaymentConfirmationModalVisible(true);
+    
+      } catch (error) {
+        console.error('Payment link generation error:', error);
+        
+        // More detailed error handling
+        Alert.alert(
+          'Payment Error', 
+          `Failed to process payment. ${error.message || 'Please try again.'}`
+        );
+      }
+    };
 
   const closePaymentMethodModal = () => {
     setIsPaymentMethodModalVisible(false);
     setSelectedPaymentMethod('');
   };
 
+  
 
   return (
     <ThemedView style={{ flex: 1 }}>
@@ -205,11 +296,11 @@ export default function CartScreen() {
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-        <Text style={styles.modalText}>Order Total: </Text>
-        <Text style={styles.modalSubtitle}>Subtotal: ${subtotal}</Text>
-        <Text style={styles.modalSubtitle}>Tax: ${tax}</Text>
-        <Text style={styles.modalSubtitle}>Total: ${total}</Text>
-        <Text style={styles.modalSubtitle}> </Text>
+          <Text style={styles.modalText}>Order Total: </Text>
+          <Text style={styles.modalSubtitle}>Subtotal: $5.99 </Text>
+          <Text style={styles.modalSubtitle}>Tax: $0.53 </Text>
+          <Text style={styles.modalSubtitle}>Total: $6.52 </Text>
+          <Text style={styles.modalSubtitle}> </Text>
           <Image source={require('@/assets/images/TMC_Logo.png')} style={styles.tmcLogo} />
           
           <TouchableOpacity 
@@ -279,7 +370,7 @@ export default function CartScreen() {
         />
       </View>
       
-      <Text style={styles.totalText}>Total: ${total}</Text>
+      <Text style={styles.totalText}>Total: $6.52</Text>
       
       <TouchableOpacity 
         style={[styles.touchableButton, styles.backButton1]} 
@@ -294,7 +385,7 @@ export default function CartScreen() {
           styles.payButton1,
           !selectedPaymentMethod && { opacity: 0.5 }
         ]}
-        onPress={handleCompletePayment}
+        onPress={handlePayment}
         disabled={!selectedPaymentMethod}
       >
         <Text style={styles.buttonText1}>Complete Payment</Text>
@@ -321,7 +412,7 @@ export default function CartScreen() {
     <View style={styles.modalContent}>
       <Text style={styles.modalText}>Payment Confirmation</Text>
       <Text style={styles.modalSubtitle}>Order #12345</Text>
-      <Text style={styles.modalSubtitle}>Total Paid: ${total}</Text>
+      <Text style={styles.modalSubtitle}>Total Paid: $6.52</Text>
       <Text style={styles.modalSubtitle}>Payment Method: {selectedPaymentMethod}</Text>
       <Text style={styles.modalSubtitle}>Date: {new Date().toLocaleDateString()}</Text>
       <Text style={styles.modalSubtitle}> </Text>
