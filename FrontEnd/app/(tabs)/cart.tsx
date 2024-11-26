@@ -107,106 +107,36 @@ export default function CartScreen() {
       setIsPaymentMethodModalVisible(false);
       setIsPaymentConfirmationModalVisible(true);
     }
-    const handlePayment = async () => {
+    async function handlePayment(cart, pickupLocation, tipAmount) {
       try {
-        // Validate selected payment method
-        if (!selectedPaymentMethod) {
-          Alert.alert('Error', 'Please select a payment method');
-          return;
-        }
-    
-        // Configuration for Square API call
-        const accessToken = 'Bearer EAAAl7bENyO2IwLTbpGL89p7qWt6p1A6C6AXjph8GtfoeYievQUUrespkltM-hh3'; // Replace with actual token
-        const locationId = 'LAWPABWTGF5CK'; // Replace with actual location ID
-        const orderAmount = 652; // $6.52 in cents
-    
-        // Generate a unique idempotency key to prevent duplicate transactions
-        const idempotencyKey = `order-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-    
-        // Construct the payload for the Square API
-        const payload = {
-          idempotency_key: idempotencyKey,
-          quick_pay: {
-            name: 'TMC Order',
-            price_money: {
-              amount: orderAmount,
-              currency: 'USD'
-            },
-            location_id: locationId
+        const response = await fetch('http://localhost:3000/orderFromCart', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-          checkout_options: {
-            accepted_payment_methods: {
-              apple_pay: selectedPaymentMethod === 'Apple Pay',
-              google_pay: selectedPaymentMethod === 'Google Pay',
-              card_present: selectedPaymentMethod === 'Credit Card',
-            }
-          }
-        };
+          body: JSON.stringify({
+            cart: cart,
+            pickupLocation: pickupLocation,
+            tip: tipAmount
+          })
+        });
     
-        // Make the API call to Square using fetch
-        const response = await fetch(
-          'https://connect.squareup.com/v2/online-checkout/payment-links',
-          {
-            method: 'POST',
-            headers: {
-              'Square-Version': '2024-11-20',
-              'Authorization': accessToken,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-          }
-        );
-    
-        // Check if the response is okay
         if (!response.ok) {
-          const errorBody = await response.text();
-          throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
+          // Parse error message from the server response
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to create order');
         }
     
-        // Parse the JSON response
         const data = await response.json();
-    
-        // Validate the response
-        if (!data || !data.payment_link || !data.payment_link.url) {
-          throw new Error('Invalid response from Square');
-        }
-    
-        const paymentUrl = data.payment_link.url;
-        
-        // Open the payment URL based on platform
-        if (Platform.OS === 'ios' || Platform.OS === 'android') {
-          try {
-            const supported = await Linking.canOpenURL(paymentUrl);
-            
-            if (supported) {
-              await Linking.openURL(paymentUrl);
-            } else {
-              throw new Error('Cannot open payment link');
-            }
-          } catch (linkError) {
-            console.error('Linking error:', linkError);
-            Alert.alert('Error', 'Unable to open payment link. Please try again.');
-            return;
-          }
-        } else {
-          // Fallback for web or other platforms
-          window.open(paymentUrl, '_blank');
-        }
-    
-        // Close payment method modal and show confirmation
-        setIsPaymentMethodModalVisible(false);
-        setIsPaymentConfirmationModalVisible(true);
-    
+        console.log('Order created successfully:', data);
+        return data.orderId;
       } catch (error) {
-        console.error('Payment link generation error:', error);
-        
-        // More detailed error handling
-        Alert.alert(
-          'Payment Error', 
-          `Failed to process payment. ${error.message || 'Please try again.'}`
-        );
+        console.error('Error during payment process:', error);
+        // You might want to show an error message to the user
+        throw error; // Re-throw to allow caller to handle the error
       }
-    };
+    }
+    
 
   const closePaymentMethodModal = () => {
     setIsPaymentMethodModalVisible(false);
@@ -385,7 +315,18 @@ export default function CartScreen() {
           styles.payButton1,
           !selectedPaymentMethod && { opacity: 0.5 }
         ]}
-        onPress={handlePayment}
+        onPress={() => {
+          handlePayment('6733ca61a2deb84e51d74db6', 'LAWPABWTGF5CK', '0.00')
+            .then(() => handleCompletePayment())
+            .catch((error) => {
+              // Handle any payment errors
+              Alert.alert(
+                'Payment Error', 
+                error.message || 'Failed to process payment', 
+                [{ text: 'OK' }]
+              );
+            });
+        }}
         disabled={!selectedPaymentMethod}
       >
         <Text style={styles.buttonText1}>Complete Payment</Text>
