@@ -13,6 +13,7 @@ const BACKEND_URL = 'http://localhost:3000';
 // MenuItem object
 const MenuItem = ({ itemId, itemName, itemDescription, itemPrice, itemImage, itemAllergen, onQuantityChange, quantities }) => (
   <ThemedView style={styles.itemContainer}>
+    {/* Menu Item text */}
     <View style={styles.textContainer}>
       <ThemedText type="defaultSemiBold">{itemName}</ThemedText>
       <ThemedText>Description: {itemDescription}</ThemedText>
@@ -21,6 +22,7 @@ const MenuItem = ({ itemId, itemName, itemDescription, itemPrice, itemImage, ite
       </ThemedText>}
       <ThemedText type="defaultSemiBold">${Number(itemPrice).toFixed(2)}</ThemedText>
       
+      {/* Menu Item quantity buttons and counter */}
       <View style={styles.quantityContainer}>
         <TouchableOpacity style={styles.button} onPress={() => onQuantityChange(itemId, -1)}>
           <ThemedText>-</ThemedText>
@@ -31,6 +33,8 @@ const MenuItem = ({ itemId, itemName, itemDescription, itemPrice, itemImage, ite
         </TouchableOpacity>
       </View>
     </View>
+
+    {/* Menu Item image */}
     <Image
       source={itemImage ? { uri: itemImage } : require('@/assets/images/icon.png')}
       style={styles.foodImage}
@@ -167,6 +171,7 @@ export default function MenuScreen() {
 // Sidebar component in MenuScreen
 const Sidebar = ({ cart, isVisible, onClose, navigation }) => 
 { 
+  // Navigation to cart/checkout page
   const closeAndNavigate = () => 
   {
     onClose();
@@ -182,6 +187,8 @@ const Sidebar = ({ cart, isVisible, onClose, navigation }) =>
     <Modal transparent={true} animationType="slide" visible={isVisible}>
       <View style={styles.overlay}>
         <View style={styles.sidebarContainer}>
+
+        {/* Sidebar text */}
           <ThemedText style={styles.sidebarTitle}>Your Cart</ThemedText>
           <ScrollView showsVerticalScrollIndicator={false}>
             {cart.length > 0 ? (
@@ -209,6 +216,7 @@ const Sidebar = ({ cart, isVisible, onClose, navigation }) =>
 
             <View style={styles.divider} />
             
+            {/* Sidebar calculations for the total */}
             <View style={styles.totalsContainer}>
               <ThemedText>Subtotal: ${subtotal.toFixed(2)}</ThemedText>
               <ThemedText>Tax: ${tax.toFixed(2)}</ThemedText>
@@ -220,6 +228,7 @@ const Sidebar = ({ cart, isVisible, onClose, navigation }) =>
             <View style={styles.bottomPadding} />
           </ScrollView>
 
+          {/* Sidebar buttons */}
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <ThemedText style={styles.closeButtonText}>X</ThemedText>
           </TouchableOpacity>
@@ -349,19 +358,23 @@ const Sidebar = ({ cart, isVisible, onClose, navigation }) =>
 
 // CSS Styles
 const styles = StyleSheet.create({
+  // Container for everything on MenuScreen
   container: {
     flex: 1,
     backgroundColor: '#FFF',
     position: 'relative',
     flexDirection: 'row',
   },
+  // Container for the entire menu section
   contentContainer: {
     flex: 1,
     transition: 'margin-right 0.3s',
   },
+  // Container for the MenuScreen title
   titleContainer: {
     marginBottom: 20
   },
+  // For the TMC logo
   restaurantLogo: {
     height: 200, 
     width: '100%', 
@@ -369,43 +382,51 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 20, 
   },
+  // Container for each menu category
   sectionContainer: {
     marginBottom: 20,
     paddingHorizontal: 16,
   },
+  // A bold horizontal line
   divider: {
     top: 5,
     height: 3, 
     backgroundColor: '#ccc', 
     marginVertical: 10, 
   },
+  // Subtitles in the menu section
   subtitle: {
     marginTop: 10,
     marginBottom: 40,
     fontSize: 20,
     fontWeight: 'bold',
   },
+  // Container for the menu items
   itemContainer: {
     flexDirection: 'row', 
     alignItems: 'center',
     marginBottom: 15,
     justifyContent: 'space-between', 
   },
+  // Formatting for menu item images
   foodImage: {
     width: 100,
     height: 100,
     borderRadius: 10,
   },
+  // Container for menu item text
   textContainer: {
     flex: 1,
     paddingRight: 10,
     marginBottom: 20,
   },
+  // Container for the menu item quantity counter
   quantityContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 8,
   },
+  // Quantity buttons
   button: {
     padding: 10,
     borderWidth: 1,
@@ -416,9 +437,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // Trash can button for removing items from cart
   removeButton: {
     bottom: 3,
   },
+  // Container for view cart and add to cart buttons
   fixedButtonContainer: {
   position: 'absolute',
   bottom: 0,
@@ -427,6 +450,7 @@ const styles = StyleSheet.create({
   flexDirection: 'column',
   alignItems: 'center',
   },
+  // Formatting for view cart button
   viewCartButton: {
   width: 60,
   height: 60,
@@ -443,6 +467,7 @@ const styles = StyleSheet.create({
   shadowOpacity: 0.3,
   shadowRadius: 4,
   },
+  // Container for the shopping cart icon in view cart button
   iconContainer: {
   display: 'flex',
   justifyContent: 'center',
@@ -450,6 +475,7 @@ const styles = StyleSheet.create({
   width: '100%',
   height: '100%',
   },
+  // Formatting of the shopping cart icon
   cartIcon: {
   textAlign: 'center',
   textAlignVertical: 'center',
@@ -457,6 +483,7 @@ const styles = StyleSheet.create({
   right: 0.5,
   bottom: 1,
   },
+  // Formatting for the add to cart button
   fixedButton: {
     position: 'absolute',
     bottom: 0,
@@ -466,6 +493,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFA726',
     alignItems: 'center',
   },
+
   // For Sidebar
   overlay: {
     flex: 1,
@@ -473,6 +501,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  // Container for the sidebar component
   sidebarContainer: {
     width: '70%',
     height: '70%',
@@ -485,17 +514,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
+  // Formatting for the title of the sidebar
   sidebarTitle: {
     padding: 10,
     textAlign: 'center',
     fontWeight: 'bold',
     fontSize: 32,
   },
+  // Formatting for each item's counter and name in sidebar
   item: {
     top: 20,
     left: 20,
   },
-  // For Sidebar Text and Icons
+  // Button that closes the sidebar
   closeButton: {
     position: 'absolute',
     marginTop: 5,
@@ -506,26 +537,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
     alignItems: 'center',
   },
+  // The 'X' in the close button
   closeButtonText: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#e5dccf',
   },
+  // Formatting of the total text in the sidebar
   totalText: {
     fontWeight: 'bold',
   },
+  // Container for all the items in sidebar
   cartItemContainer: {
     marginBottom: 15,
   },
+  // Formatting of each item's text in sidebar
   cartItemDetails: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
   },
-  cartItemText: {
-    fontSize: 16,
-    flexShrink: 1,
-  },
+  // Formatting of each item's price in sidebar
   cartItemPrice: {
     fontWeight: 'bold',
     fontSize: 16,
@@ -533,9 +565,11 @@ const styles = StyleSheet.create({
     width: 100,
     top: 17,
   },
+  // Some space/padding
   bottomPadding: {
     height: 60,
   },
+  // Formatting for the checkout buton
   navigateButton: {
     position: 'absolute',
     bottom: 0,
@@ -546,6 +580,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F54302',
     alignItems: 'center',
   },
+  // The text for the checkout button
   navigateText: {
     fontSize: 24,
     fontWeight: 'bold',
