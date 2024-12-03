@@ -107,7 +107,7 @@ export default function CartScreen() {
       setIsPaymentMethodModalVisible(false);
       setIsPaymentConfirmationModalVisible(true);
     }
-    async function handlePayment(cart, pickupLocation, tipAmount) {
+    async function handlePayment() {
       try {
         const response = await fetch('http://localhost:3000/orderFromCart', {
           method: 'POST',
@@ -115,28 +115,46 @@ export default function CartScreen() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            cart: cart,
-            pickupLocation: pickupLocation,
-            tip: tipAmount
+            amount: 10000, // Amount in cents
+            name: 'Order Payment'
           })
         });
     
         if (!response.ok) {
-          // Parse error message from the server response
           const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to create order');
+          throw new Error(errorData.error || 'Failed to create payment link');
         }
     
         const data = await response.json();
-        console.log('Order created successfully:', data);
-        return data.orderId;
+        console.log('Payment link created:', data);
+    
+        // Create a clickable link element
+        const paymentLink = document.createElement('a');
+        paymentLink.href = data.paymentUrl;
+        paymentLink.textContent = 'Proceed to Payment';
+        paymentLink.className = 'payment-link';
+        paymentLink.target = '_blank'; // Open in new tab
+        paymentLink.rel = 'noopener noreferrer'; // Security best practice
+    
+        // Optional: Append to a specific container or replace existing content
+        const paymentContainer = document.getElementById('payment-container');
+        if (paymentContainer) {
+          paymentContainer.innerHTML = ''; 
+          paymentContainer.appendChild(paymentLink);
+        } else {
+          // Fallback to direct navigation if no container found
+          window.location.href = data.paymentUrl;
+        }
       } catch (error) {
         console.error('Error during payment process:', error);
-        // You might want to show an error message to the user
-        throw error; // Re-throw to allow caller to handle the error
+        const errorContainer = document.getElementById('error-container');
+        if (errorContainer) {
+          errorContainer.textContent = `Payment Error: ${error.message}`;
+          errorContainer.style.color = 'red';
+        }
+        throw error;
       }
     }
-    
 
   const closePaymentMethodModal = () => {
     setIsPaymentMethodModalVisible(false);
@@ -315,18 +333,8 @@ export default function CartScreen() {
           styles.payButton1,
           !selectedPaymentMethod && { opacity: 0.5 }
         ]}
-        onPress={() => {
-          handlePayment('6733ca61a2deb84e51d74db6', 'LAWPABWTGF5CK', '0.00')
-            .then(() => handleCompletePayment())
-            .catch((error) => {
-              // Handle any payment errors
-              Alert.alert(
-                'Payment Error', 
-                error.message || 'Failed to process payment', 
-                [{ text: 'OK' }]
-              );
-            });
-        }}
+        onPress={handlePayment}
+
         disabled={!selectedPaymentMethod}
       >
         <Text style={styles.buttonText1}>Complete Payment</Text>
