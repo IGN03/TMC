@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
   },
 
   touchableButton: {
-    width: '100%',
+    width: '20%',
     padding: 15,
     borderRadius: 8,
     marginVertical: 5,
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF',
     padding: 12,
     borderRadius: 8,
-    width: '100%',
+    width: '20%',
     marginBottom: 10,
     alignItems: 'center',
   },
@@ -504,7 +504,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#34C759',
     padding: 12,
     borderRadius: 8,
-    width: '100%',
+    width: '20%',
     alignItems: 'center',
   },
   
