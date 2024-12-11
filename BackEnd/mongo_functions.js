@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 // TODO set up secrets for connection string
 
-const uri = process.env.ATLAS_URI
+const uri = process.env.ATLAS_URI;
 
 const client = new MongoClient(uri, {
     serverApi: {
@@ -36,70 +36,83 @@ const orders = myDB.collection("orders");
 const accounts = myDB.collection("accounts");
 const pickupLocations = myDB.collection("pickupLocations");
 
-async function postMenuItem(newMenuItem){
-    const result = await menuItems.insertOne(newMenuItem.getPostDict());
+async function postMenuItems(body){
+    const result = await menuItems.insertOne(body);
     console.log(
-        `menuItem inserted with the _id: ${result.insertedId}`,
+        `new item in menuItems created with the _id: ${result.insertedId}`,
     );
     return result.insertedId
 }
 
+app.post('/menuItems', async (req, res) => {
+    const newItem = new MenuItem(req.body)
+  
+    if (!newItem.hasRequiredPostFields()) {
+        return res.status(400).json({ error: 'Required fields are missing' });
+    }
+    
+    try {
+        const item = await postMenuItems(newItem.getPostDict());
+        res.status(201).json({ message: 'item added successfully', item });
+        return item
+    } catch (error) {
+        console.log("Error: " + error)
+        res.status(500).json({ error: 'Failed to add item' });
+    }
+});
+
+
 async function getAllMenuItems(query={}){
     const result = await menuItems.find(query).toArray();
-    console.log("all menu items: ", result)
+    console.log("all items: ", result)
     return result   
 }
 
-async function updateMenuItem(filter, updateDoc){
+
+app.get('/menuItems', async (req, res) => {
+    const query = req.query;
+    if(query._id){
+        const idString = query._id;
+        if (!ObjectId.isValid(idString) || idString.length !== 24) {
+            res.status(400).json({ error: 'Invalid _id format' });
+            return
+        }
+        query._id = new ObjectId(idString)
+    }
+
+    try {
+        const foundItems = await getAllMenuItems(query);
+        res.status(201).json({ message: 'items grabbed', foundItems });
+        return foundItems;
+    } catch (error) {
+        console.log("Error: " + error)
+        res.status(500).json({ error: 'Failed to get items' });
+    }
+});
+
+
+async function updateMenuItems(filter, updateDoc){
     const result = await menuItems.updateOne(filter, updateDoc);
     console.log(`${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount} document(s)`);
     return result
 }
 
 
-app.post('/menuItem', async (req, res) => {
-    const newMenuItem = new MenuItem(req.body);
-
-    if (!newMenuItem.hasRequiredPostFields()) {
-        return res.status(400).json({ error: 'Required fields are missing' });
-    }
-    
-    try {
-        const menuItem = await postMenuItem(newMenuItem);
-        res.status(201).json({ message: 'Menu item added successfully', menuItem });
-        return menuItem
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to add menu item' });
-    }
-});
-
-
-app.get('/menuItems', async (req, res) => {
-    const query = req.query;
-    if(query._id){
-        query._id = new ObjectId(query._id)
-    }
-
-    try {
-        const foundMenuItems = await getAllMenuItems(query);
-        res.status(201).json({ message: 'Menu items grabbed', foundMenuItems });
-        return foundMenuItems;
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to get menu items' });
-    }
-});
-
-
-app.put('/menuItem', async (req, res) => {
+app.put('/menuItems', async (req, res) => {
     const updateDoc  = {$set: req.body};
     const query = req.query
 
     if(query._id){
-        query._id = new ObjectId(query._id)
+        const idString = query._id;
+        if (!ObjectId.isValid(idString) || idString.length !== 24) {
+            res.status(400).json({ error: 'Invalid _id format' });
+            return
+        }
+        query._id = new ObjectId(idString)
     }
 
     try {
-        const result = await updateMenuItem(query, updateDoc);
+        const result = await updateMenuItems(query, updateDoc);
         res.status(200).json({ matchedCount: result.matchedCount, modifiedCount: result.modifiedCount });
     } catch (error) {
         console.log("Error: " + error)
@@ -108,219 +121,260 @@ app.put('/menuItem', async (req, res) => {
 });
 
 
-async function postOrder(newOrder){
-    const result = await orders.insertOne(newOrder.getPostDict());
+
+
+async function postOrders(body){
+    const result = await orders.insertOne(body);
     console.log(
-        `order inserted with the _id: ${result.insertedId}`,
+        `new item in orders created with the _id: ${result.insertedId}`,
     );
     return result.insertedId
 }
 
+app.post('/orders', async (req, res) => {
+    const newItem = new Order(req.body)
+  
+    if (!newItem.hasRequiredPostFields()) {
+        return res.status(400).json({ error: 'Required fields are missing' });
+    }
+    
+    try {
+        const item = await postOrders(newItem.getPostDict());
+        res.status(201).json({ message: 'item added successfully', item });
+        return item
+    } catch (error) {
+        console.log("Error: " + error)
+        res.status(500).json({ error: 'Failed to add item' });
+    }
+});
 
-async function getOrders(query={}){
+
+async function getAllOrders(query={}){
     const result = await orders.find(query).toArray();
-    console.log("all orders items: ", result);
-    return result;
+    console.log("all items: ", result)
+    return result   
 }
 
 
-async function updateOrder(filter, updateDoc){
+app.get('/orders', async (req, res) => {
+    const query = req.query;
+    if(query._id){
+        const idString = query._id;
+        if (!ObjectId.isValid(idString) || idString.length !== 24) {
+            res.status(400).json({ error: 'Invalid _id format' });
+            return
+        }
+        query._id = new ObjectId(idString)
+    }
+
+    try {
+        const foundItems = await getAllOrders(query);
+        res.status(201).json({ message: 'items grabbed', foundItems });
+        return foundItems;
+    } catch (error) {
+        console.log("Error: " + error)
+        res.status(500).json({ error: 'Failed to get items' });
+    }
+});
+
+
+async function updateOrders(filter, updateDoc){
     const result = await orders.updateOne(filter, updateDoc);
     console.log(`${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount} document(s)`);
     return result
 }
 
 
-app.post('/order', async (req, res) => {
-    const newOrder = new Order(req.body);
-
-    if (!newOrder.hasRequiredPostFields()) {
-        return res.status(400).json({ error: 'Required fields are missing' });
-    }
-    
-    try {
-        const order = await postOrder(newOrder);
-        res.status(201).json({ message: 'order added successfully', order });
-        return order
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to add order' });
-    }
-});
-
-
-app.get('/orders', async (req, res) => {
-    const query = req.query;
-    console.log(query)
-    if(query._id){
-        query._id = new ObjectId(query._id)
-    }
-    console.log("id handled")
-    try {
-        const foundOrders = await getOrders(query);
-        res.status(201).json({ message: 'orders grabbed', foundOrders });
-        return foundOrders;
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to get orders' });
-    }
-});
-
-
-app.put('/order', async (req, res) => {
+app.put('/orders', async (req, res) => {
     const updateDoc  = {$set: req.body};
     const query = req.query
 
     if(query._id){
-        query._id = new ObjectId(query._id)
+        const idString = query._id;
+        if (!ObjectId.isValid(idString) || idString.length !== 24) {
+            res.status(400).json({ error: 'Invalid _id format' });
+            return
+        }
+        query._id = new ObjectId(idString)
     }
-    
+
     try {
-        const result = await updateOrder(query, updateDoc);
+        const result = await updateOrders(query, updateDoc);
         res.status(200).json({ matchedCount: result.matchedCount, modifiedCount: result.modifiedCount });
     } catch (error) {
-        res.status(500).json({ error: 'Failed to update order' });
+        console.log("Error: " + error)
+        res.status(500).json({ error: 'Failed to update menu item' });
     }
 });
 
 
-async function createAccount(newAccount){
-    const result = await accounts.insertOne(newAccount.getPostDict());
+
+
+async function postAccounts(body){
+    const result = await accounts.insertOne(body);
     console.log(
-        `account inserted with the _id: ${result.insertedId}`,
+        `new item in accounts created with the _id: ${result.insertedId}`,
     );
     return result.insertedId
 }
 
-async function getAccounts(query={}){
+app.post('/accounts', async (req, res) => {
+    const newItem = new Account(req.body)
+  
+    if (!newItem.hasRequiredPostFields()) {
+        return res.status(400).json({ error: 'Required fields are missing' });
+    }
+    
+    try {
+        const item = await postAccounts(newItem.getPostDict());
+        res.status(201).json({ message: 'item added successfully', item });
+        return item
+    } catch (error) {
+        console.log("Error: " + error)
+        res.status(500).json({ error: 'Failed to add item' });
+    }
+});
+
+
+async function getAllAccounts(query={}){
     const result = await accounts.find(query).toArray();
-    console.log("all accounts: ", result);
-    return result;
+    console.log("all items: ", result)
+    return result   
 }
 
 
-async function updateAccount(filter, updateDoc){
+app.get('/accounts', async (req, res) => {
+    const query = req.query;
+    if(query._id){
+        const idString = query._id;
+        if (!ObjectId.isValid(idString) || idString.length !== 24) {
+            res.status(400).json({ error: 'Invalid _id format' });
+            return
+        }
+        query._id = new ObjectId(idString)
+    }
+
+    try {
+        const foundItems = await getAllAccounts(query);
+        res.status(201).json({ message: 'items grabbed', foundItems });
+        return foundItems;
+    } catch (error) {
+        console.log("Error: " + error)
+        res.status(500).json({ error: 'Failed to get items' });
+    }
+});
+
+
+async function updateAccounts(filter, updateDoc){
     const result = await accounts.updateOne(filter, updateDoc);
     console.log(`${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount} document(s)`);
     return result
 }
 
 
-app.post('/account', async (req, res) => {
-    const newAccount = new Account(req.body);
-
-    if (!newAccount.hasRequiredPostFields()) {
-        return res.status(400).json({ error: 'Required fields are missing' });
-    }
-    
-    try {
-        const account = await createAccount(newAccount);
-        res.status(201).json({ message: 'account successfully created', account });
-        return account
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to create account' });
-    }
-});
-
-
-app.get('/accounts', async (req, res) => {
-    const query = req.query;
-    if(query._id){
-        query._id = new ObjectId(query._id)
-    }
-    try {
-        const foundAccounts = await getAccounts(query);
-        res.status(201).json({ message: 'accounts grabbed', foundAccounts });
-        return foundAccounts;
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to get accounts' });
-    }
-});
-
-
-app.put('/account', async (req, res) => {
+app.put('/accounts', async (req, res) => {
     const updateDoc  = {$set: req.body};
     const query = req.query
 
     if(query._id){
-        query._id = new ObjectId(query._id)
+        const idString = query._id;
+        if (!ObjectId.isValid(idString) || idString.length !== 24) {
+            res.status(400).json({ error: 'Invalid _id format' });
+            return
+        }
+        query._id = new ObjectId(idString)
     }
 
     try {
-        const result = await updateAccount(query, updateDoc);
+        const result = await updateAccounts(query, updateDoc);
         res.status(200).json({ matchedCount: result.matchedCount, modifiedCount: result.modifiedCount });
     } catch (error) {
-        res.status(500).json({ error: 'Failed to update account' });
+        console.log("Error: " + error)
+        res.status(500).json({ error: 'Failed to update menu item' });
     }
 });
 
-
-async function createPickupLocation(newPickupLocation){
-    const result = await pickupLocations.insertOne(newPickupLocation.getPostDict());
+async function postPickupLocations(body){
+    const result = await pickupLocations.insertOne(body);
     console.log(
-        `pickup location inserted with the _id: ${result.insertedId}`,
+        `new item in pickupLocations created with the _id: ${result.insertedId}`,
     );
     return result.insertedId
 }
 
+app.post('/pickupLocations', async (req, res) => {
+    const newItem = new PickupLocation(req.body)
+  
+    if (!newItem.hasRequiredPostFields()) {
+        return res.status(400).json({ error: 'Required fields are missing' });
+    }
+    
+    try {
+        const item = await postPickupLocations(newItem.getPostDict());
+        res.status(201).json({ message: 'item added successfully', item });
+        return item
+    } catch (error) {
+        console.log("Error: " + error)
+        res.status(500).json({ error: 'Failed to add item' });
+    }
+});
 
-async function getPickupLocations(query={}){
+
+async function getAllPickupLocations(query={}){
     const result = await pickupLocations.find(query).toArray();
-    console.log("all pickup locations: ", result)
+    console.log("all items: ", result)
     return result   
 }
 
-async function updatePickupLocation(filter, updateDoc){
+
+app.get('/pickupLocations', async (req, res) => {
+    const query = req.query;
+    if(query._id){
+        const idString = query._id;
+        if (!ObjectId.isValid(idString) || idString.length !== 24) {
+            res.status(400).json({ error: 'Invalid _id format' });
+            return
+        }
+        query._id = new ObjectId(idString)
+    }
+
+    try {
+        const foundItems = await getAllPickupLocations(query);
+        res.status(201).json({ message: 'items grabbed', foundItems });
+        return foundItems;
+    } catch (error) {
+        console.log("Error: " + error)
+        res.status(500).json({ error: 'Failed to get items' });
+    }
+});
+
+
+async function updatePickupLocations(filter, updateDoc){
     const result = await pickupLocations.updateOne(filter, updateDoc);
     console.log(`${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount} document(s)`);
     return result
 }
 
 
-app.post('/pickupLocation', async (req, res) => {
-    const newPickupLocation = new PickupLocation(req.body)
-
-    if (!newPickupLocation.hasRequiredPostFields()) {
-        return res.status(400).json({ error: 'Required fields are missing' });
-    }
-    
-    try {
-        const pickupLocation = await createPickupLocation(newPickupLocation);
-        res.status(201).json({ message: 'pickup location successfully created', pickupLocation });
-        return pickupLocation
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to create pickup location' });
-    }
-});
-
-
-app.get('/pickupLocations', async (req, res) => {
-    const query = req.query;
-    if(query._id){
-        query._id = new ObjectId(query._id)
-    }
-    try {
-        const foundPickupLocations = await getPickupLocations(query);
-        res.status(201).json({ message: 'pickup locations grabbed', foundPickupLocations });
-        return foundPickupLocations;
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to get pickup locations' });
-    }
-});
-
-
-app.put('/pickupLocation', async (req, res) => {
+app.put('/pickupLocations', async (req, res) => {
     const updateDoc  = {$set: req.body};
     const query = req.query
 
     if(query._id){
-        query._id = new ObjectId(query._id)
+        const idString = query._id;
+        if (!ObjectId.isValid(idString) || idString.length !== 24) {
+            res.status(400).json({ error: 'Invalid _id format' });
+            return
+        }
+        query._id = new ObjectId(idString)
     }
 
     try {
-        const result = await updatePickupLocation(query, updateDoc);
+        const result = await updatePickupLocations(query, updateDoc);
         res.status(200).json({ matchedCount: result.matchedCount, modifiedCount: result.modifiedCount });
     } catch (error) {
-        console.log(error)
-        res.status(500).json({ error: 'Failed to update pickup location' });
+        console.log("Error: " + error)
+        res.status(500).json({ error: 'Failed to update menu item' });
     }
 });
 
@@ -337,6 +391,10 @@ app.post('/activateLocation', async (req, res) => {
         if(!req.body._id){
             res.status(400).json({error: 'Missing _id field'})
         } else {
+            const idString = req.body._id;
+            if (!ObjectId.isValid(idString) || idString.length !== 24) {
+                return res.status(400).json({ error: 'Invalid _id format' });
+            }
             const idToActivate = {_id : new ObjectId(req.body._id)} 
             const pickupLocation = await ActivatePickupLocation(idToActivate);
             res.status(201).json({ message: 'active location changed', pickupLocation });
@@ -352,7 +410,7 @@ app.post('/activateLocation', async (req, res) => {
 async function getMenuItemsFromCart( cart ){
     let items = []
     for (let i = 0; i < cart.length; i++) { 
-        let query = {_id : new ObjectId(cart[i])}
+        let query = {_id : new ObjectId(cart[i]._id)}
         let foundMenuItems = await getAllMenuItems(query);
         items.push(foundMenuItems[0])
     }
@@ -364,14 +422,25 @@ app.post('/orderFromCart', async(req, res) => {
     const query = req.query
     const body = req.body
     try {
+        // Check for valid object id format
+        const idString = query._id;
+        if (!ObjectId.isValid(idString) || idString.length !== 24) {
+            console.log("invalidId")
+            res.status(400).json({ error: 'Invalid _id format' });
+            return
+        }
+
         if (!query._id ||  !body.pickupLocation || !body.tip){
             res.status(400).json({error: 'Missing required fields field'})
         }
         else{
             // get the cart from the account
-            query._id = new ObjectId(query._id)
-            const foundAccount = await getAccounts(query);
+            query._id = new ObjectId(idString)
+            const foundAccount = await getAllAccounts(query);
             cart = foundAccount[0].cart
+            if (cart.length< 1){
+                res.status(400).json({error: 'The cart is empty'})
+            }
             // calculte the total cost of the items
             let foundMenuItems = await getMenuItemsFromCart(cart)
             let cost = 0
@@ -390,7 +459,7 @@ app.post('/orderFromCart', async(req, res) => {
                 completed: null
             }
             let newOrder = new Order(order)
-            const orderId = await postOrder(newOrder);
+            const orderId = await postOrders(newOrder);
             res.status(201).json({ message: 'order added successfully', orderId });
             return orderId
         }

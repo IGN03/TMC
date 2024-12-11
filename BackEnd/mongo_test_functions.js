@@ -36,8 +36,7 @@ async function fetchData(url, query="") {
             method: 'GET', 
         });
 
-        if (!response.ok) {
-            console.log(response.status)
+        if (!response) {
             throw new Error('Network response was not ok');
         }
 
@@ -73,23 +72,24 @@ async function updateData(url, inputBody) {
 
 
 async function testPostMenuItem(){
-    const url = BASE_URL + '/menuItem';
+    const url = BASE_URL + '/menuItems';
     const body = {
         name: 'Test Burger',
         price: 9.99,
         description: 'Delicious burger',
-        category: 'Food'
+        category: 'Main Dish'
     };
     result = await postData(url, body);
-    assert.strictEqual(result.message, 'Menu item added successfully');
-    const insertedId = result.menuItem;
-    //result = await fetchData(BASE_URL + '/menuItems?_id=' + insertedId, '_id='+ insertedId)
+    assert.strictEqual(result.message, 'item added successfully');
+    const insertedId = result.item;
     result = await fetchData(BASE_URL + '/menuItems?_id='+ insertedId)
-    assert.strictEqual(result.foundMenuItems[0]._id, insertedId )
+    assert.strictEqual(result.foundItems[0]._id, insertedId )
+    assert.strictEqual(result.foundItems[0].active, true )
+    assert.strictEqual(result.foundItems[0].category, body.category )
 }
 
 async function testPostEmptyMenuItem(){
-    const url = BASE_URL + '/menuItem';
+    const url = BASE_URL + '/menuItems';
     const body = {};
     result = await postData(url, body);
     assert.strictEqual(result.error, 'Required fields are missing');
@@ -97,7 +97,7 @@ async function testPostEmptyMenuItem(){
 
 
 async function testPostIncompleteMenuItem(){
-    const url = BASE_URL + '/menuItem';
+    const url = BASE_URL + '/menuItems';
     const body = {
         price: 9.99,
         description: 'Delicious burger',
@@ -108,7 +108,7 @@ async function testPostIncompleteMenuItem(){
 }
 
 async function testUpdateMenuItem(){
-    const url = BASE_URL + '/menuItem';
+    const url = BASE_URL + '/menuItems';
     const body = {
         name: 'Test Burger',
         price: 9.99,
@@ -116,25 +116,40 @@ async function testUpdateMenuItem(){
         category: 'Food'
     };
     result = await postData(url, body);
-    assert.strictEqual(result.message, 'Menu item added successfully');
-    const insertedId = result.menuItem;
+    assert.strictEqual(result.message, 'item added successfully');
+    const insertedId = result.item;
     const updateItem = {
         name: 'Updated Item Name',
         description: 'This is the updated description of the item',
-        price: 99.99
+        price: 99.99,
+        active: false
     };
     await updateData(url + '?_id='+ insertedId, updateItem)
     result = await fetchData(BASE_URL + '/menuItems?_id='+ insertedId)
-    assert.strictEqual(result.foundMenuItems[0]._id, insertedId )
-    assert.strictEqual(result.foundMenuItems[0].name, updateItem.name)
-    assert.strictEqual(result.foundMenuItems[0].description, updateItem.description)
-    assert.strictEqual(result.foundMenuItems[0].price, updateItem.price)
+    assert.strictEqual(result.foundItems[0]._id, insertedId )
+    assert.strictEqual(result.foundItems[0].name, updateItem.name)
+    assert.strictEqual(result.foundItems[0].description, updateItem.description)
+    assert.strictEqual(result.foundItems[0].price, updateItem.price)
+    assert.strictEqual(result.foundItems[0].active, updateItem.active)
+}
+
+
+async function testMenuItemWithBadId(){
+    const url = BASE_URL + '/menuItems';
+    result = await fetchData(url + '?_id='+ "abababab")
+    assert.strictEqual(result.error, "Invalid _id format" )
+    result = await fetchData(url + '?_id='+ "qwertyuioplkjhgfdsazxcvb")
+    assert.strictEqual(result.error, "Invalid _id format" )
+    await updateData(url + '?_id='+ "abababab", {})
+    assert.strictEqual(result.error, "Invalid _id format" )
+    await updateData(url + '?_id='+ "qwertyuioplkjhgfdsazxcvb", {})
+    assert.strictEqual(result.error, "Invalid _id format" )
 }
 
 
 
 async function testPostOrder(){
-    const url = BASE_URL + '/order';
+    const url = BASE_URL + '/orders';
     const body = {  
         accountId : '2342abdc',
         orderTime : "2023-09-24T15:30:45Z",
@@ -145,14 +160,14 @@ async function testPostOrder(){
         completed : "2023-09-24T16:30:45Z",
     };
     result = await postData(url, body);
-    assert.strictEqual(result.message, 'order added successfully');
-    const insertedId = result.order;
+    assert.strictEqual(result.message, 'item added successfully');
+    const insertedId = result.item;
     result = await fetchData(BASE_URL + '/orders?_id='+ insertedId)
-    assert.strictEqual(result.foundOrders[0]._id, insertedId )
+    assert.strictEqual(result.foundItems[0]._id, insertedId )
 }
 
 async function testPostEmptyOrder(){
-    const url = BASE_URL + '/order';
+    const url = BASE_URL + '/orders';
     const body = {};
     result = await postData(url, body);
     assert.strictEqual(result.error, 'Required fields are missing');
@@ -160,7 +175,7 @@ async function testPostEmptyOrder(){
 
 
 async function testPostIncompleteOrder(){
-    const url = BASE_URL + '/order';
+    const url = BASE_URL + '/orders';
     const body = {  
         orderTime : "2023-09-24T15:30:45Z",
         pickupLocation : 3,
@@ -173,7 +188,7 @@ async function testPostIncompleteOrder(){
 }
 
 async function testUpdateOrder(){
-    const url = BASE_URL + '/order';
+    const url = BASE_URL + '/orders';
     const body = {  
         accountId : '2342abdc',
         orderTime : "2023-09-24T15:30:45Z",
@@ -184,8 +199,8 @@ async function testUpdateOrder(){
         completed : "2023-09-24T16:30:45Z",
     };
     result = await postData(url, body);
-    assert.strictEqual(result.message, 'order added successfully');
-    const insertedId = result.order;
+    assert.strictEqual(result.message, 'item added successfully');
+    const insertedId = result.item;
     const updateItem = {  
         pickupLocation : 4,
         items : ['16','7','6','1'],
@@ -195,34 +210,48 @@ async function testUpdateOrder(){
     };
     await updateData(url + '?_id='+ insertedId, updateItem)
     result = await fetchData(BASE_URL + '/orders?_id='+ insertedId)
-    assert.strictEqual(result.foundOrders[0]._id, insertedId )
-    assert.strictEqual(result.foundOrders[0].pickupLocation, updateItem.pickupLocation)
-    assert.strictEqual(result.foundOrders[0].items[0], updateItem.items[0])
-    assert.strictEqual(result.foundOrders[0].costOfItems, updateItem.costOfItems)
-    assert.strictEqual(result.foundOrders[0].tip, updateItem.tip)
-    assert.strictEqual(result.foundOrders[0].completed, updateItem.completed)
+    assert.strictEqual(result.foundItems[0]._id, insertedId )
+    assert.strictEqual(result.foundItems[0].pickupLocation, updateItem.pickupLocation)
+    assert.strictEqual(result.foundItems[0].items[0], updateItem.items[0])
+    assert.strictEqual(result.foundItems[0].costOfItems, updateItem.costOfItems)
+    assert.strictEqual(result.foundItems[0].tip, updateItem.tip)
+    assert.strictEqual(result.foundItems[0].completed, updateItem.completed)
+}
+
+
+async function testOrderWithBadId(){
+    const url = BASE_URL + '/orders';
+    result = await fetchData(url + '?_id='+ "abababab")
+    assert.strictEqual(result.error, "Invalid _id format" )
+    result = await fetchData(url + '?_id='+ "qwertyuioplkjhgfdsazxcvb")
+    assert.strictEqual(result.error, "Invalid _id format" )
+    await updateData(url + '?_id='+ "abababab", {})
+    assert.strictEqual(result.error, "Invalid _id format" )
+    await updateData(url + '?_id='+ "qwertyuioplkjhgfdsazxcvb", {})
+    assert.strictEqual(result.error, "Invalid _id format" )
 }
 
 
 async function testPostAccount(){
-    const url = BASE_URL + '/account';
+    const url = BASE_URL + '/accounts';
     const body = {  
         name : "the tester",
         email : "theTester@test.com",
         password : "12345",
         phone : "122-333-4444",
         accessLevel : 1, 
-        cart : ['1', '2', '3', '4']
+        cart : [{_id: 1, name: "m", price: 10}, {_id: 1, name: "m", price: 10}, {_id: 2, name: "n", price: 8}, {_id: 5, name: "p", price: 2.4}]
     };
     result = await postData(url, body);
-    assert.strictEqual(result.message, 'account successfully created');
-    const insertedId = result.account;
+    assert.strictEqual(result.message, 'item added successfully');
+    const insertedId = result.item;
     result = await fetchData(BASE_URL + '/accounts?_id='+ insertedId)
-    assert.strictEqual(result.foundAccounts[0]._id, insertedId )
+    assert.strictEqual(result.foundItems[0]._id, insertedId )
+    assert.strictEqual(result.foundItems[0].cart.length, 4)
 }
 
 async function testPostEmptyAccount(){
-    const url = BASE_URL + '/account';
+    const url = BASE_URL + '/accounts';
     const body = {};
     result = await postData(url, body);
     assert.strictEqual(result.error, 'Required fields are missing');
@@ -230,64 +259,77 @@ async function testPostEmptyAccount(){
 
 
 async function testPostIncompleteAccount(){
-    const url = BASE_URL + '/account';
+    const url = BASE_URL + '/accounts';
     const body = {  
         name : "the tester",
         phone : "122-333-4444",
         accessLevel : 1, 
-        cart : ['1', '2', '3', '4']
+        cart :  [{_id: 1, name: "m", price: 10}, {_id: 1, name: "m", price: 10}, {_id: 2, name: "n", price: 8}, {_id: 5, name: "p", price: 2.4}]
     };
     result = await postData(url, body);
     assert.strictEqual(result.error, 'Required fields are missing');
 }
 
 async function testUpdateAccount(){
-    const url = BASE_URL + '/account';
+    const url = BASE_URL + '/accounts';
     const body = {  
         name : "the tester",
         email : "theTester@test.com",
         password : "12345",
         phone : "122-333-4444",
         accessLevel : 1, 
-        cart : ['1', '2', '3', '4']
+        cart : []
     };
     result = await postData(url, body);
-    assert.strictEqual(result.message, 'account successfully created');
-    const insertedId = result.account;
+    assert.strictEqual(result.message, 'item added successfully');
+    const insertedId = result.item;
     const updateItem = {  
         email : "testing2@test.com",
         password : "abcdefg",
         phone : "122-333-5555",
         accessLevel : 0, 
-        cart : ['9', '2', '3', '4']
+        cart : [{_id: 1, name: "m", price: 10}, {_id: 1, name: "m", price: 10}, {_id: 2, name: "n", price: 8}, {_id: 5, name: "p", price: 2.4}]
     };
     await updateData(url + '?_id='+ insertedId, updateItem)
     result = await fetchData(BASE_URL + '/accounts?_id='+ insertedId)
-    assert.strictEqual(result.foundAccounts[0]._id, insertedId )
-    assert.strictEqual(result.foundAccounts[0].email, updateItem.email)
-    assert.strictEqual(result.foundAccounts[0].cart[0], updateItem.cart[0])
-    assert.strictEqual(result.foundAccounts[0].password, updateItem.password)
-    assert.strictEqual(result.foundAccounts[0].phone, updateItem.phone)
-    assert.strictEqual(result.foundAccounts[0].accessLevel, updateItem.accessLevel)
+    assert.strictEqual(result.foundItems[0]._id, insertedId )
+    assert.strictEqual(result.foundItems[0].email, updateItem.email)
+    assert.strictEqual(result.foundItems[0].cart[0].name, updateItem.cart[0].name)
+    assert.strictEqual(result.foundItems[0].password, updateItem.password)
+    assert.strictEqual(result.foundItems[0].phone, updateItem.phone)
+    assert.strictEqual(result.foundItems[0].accessLevel, updateItem.accessLevel)
+}
+
+
+async function testAccountWithBadId(){
+    const url = BASE_URL + '/accounts';
+    result = await fetchData(url + '?_id='+ "abababab")
+    assert.strictEqual(result.error, "Invalid _id format" )
+    result = await fetchData(url + '?_id='+ "qwertyuioplkjhgfdsazxcvb")
+    assert.strictEqual(result.error, "Invalid _id format" )
+    await updateData(url + '?_id='+ "abababab", {})
+    assert.strictEqual(result.error, "Invalid _id format" )
+    await updateData(url + '?_id='+ "qwertyuioplkjhgfdsazxcvb", {})
+    assert.strictEqual(result.error, "Invalid _id format" )
 }
 
 
 async function testPostPickupLocaion(){
-    const url = BASE_URL + '/pickupLocation';
+    const url = BASE_URL + '/pickupLocations';
     const body = {  
         address : "123 RPI Rd.",
         contactInfo : "123-456-7890",
         name : "RPI union"
     };
     result = await postData(url, body);
-    assert.strictEqual(result.message, 'pickup location successfully created');
-    const insertedId = result.pickupLocation;
+    assert.strictEqual(result.message, 'item added successfully');
+    const insertedId = result.item;
     result = await fetchData(BASE_URL + '/pickupLocations?_id='+ insertedId)
-    assert.strictEqual(result.foundPickupLocations[0]._id, insertedId )
+    assert.strictEqual(result.foundItems[0]._id, insertedId )
 }
 
 async function testPostEmptyPickupLocation(){
-    const url = BASE_URL + '/pickupLocation';
+    const url = BASE_URL + '/pickupLocations';
     const body = {};
     result = await postData(url, body);
     assert.strictEqual(result.error, 'Required fields are missing');
@@ -295,7 +337,7 @@ async function testPostEmptyPickupLocation(){
 
 
 async function testPostIncompletePickupLocation(){
-    const url = BASE_URL + '/pickupLocation';
+    const url = BASE_URL + '/pickupLocations';
     const body = {  
         contactInfo : "123-456-7890",
         name : "RPI union"
@@ -305,15 +347,15 @@ async function testPostIncompletePickupLocation(){
 }
 
 async function testUpdatePickupLocation(){
-    const url = BASE_URL + '/pickupLocation';
+    const url = BASE_URL + '/pickupLocations';
     const body = {  
         address : "123 RPI Rd.",
         contactInfo : "123-456-7890",
         name : "RPI union"
     };
     result = await postData(url, body);
-    assert.strictEqual(result.message, 'pickup location successfully created');
-    const insertedId = result.pickupLocation;
+    assert.strictEqual(result.message, 'item added successfully');
+    const insertedId = result.item;
     const updateItem = {  
         address : "193 RPI Rd.",
         contactInfo : "123-456-4321",
@@ -322,16 +364,29 @@ async function testUpdatePickupLocation(){
     };
     await updateData(url + '?_id='+ insertedId, updateItem)
     result = await fetchData(BASE_URL + '/pickupLocations?_id='+ insertedId)
-    assert.strictEqual(result.foundPickupLocations[0]._id, insertedId )
-    assert.strictEqual(result.foundPickupLocations[0].address, updateItem.address)
-    assert.strictEqual(result.foundPickupLocations[0].contactInfo, updateItem.contactInfo)
-    assert.strictEqual(result.foundPickupLocations[0].name, updateItem.name)
-    assert.strictEqual(result.foundPickupLocations[0].active, true)
+    assert.strictEqual(result.foundItems[0]._id, insertedId )
+    assert.strictEqual(result.foundItems[0].address, updateItem.address)
+    assert.strictEqual(result.foundItems[0].contactInfo, updateItem.contactInfo)
+    assert.strictEqual(result.foundItems[0].name, updateItem.name)
+    assert.strictEqual(result.foundItems[0].active, true)
+}
+
+
+async function testPickupLocationWithBadId(){
+    const url = BASE_URL + '/pickupLocations';
+    result = await fetchData(url + '?_id='+ "abababab")
+    assert.strictEqual(result.error, "Invalid _id format" )
+    result = await fetchData(url + '?_id='+ "qwertyuioplkjhgfdsazxcvb")
+    assert.strictEqual(result.error, "Invalid _id format" )
+    await updateData(url + '?_id='+ "abababab", {})
+    assert.strictEqual(result.error, "Invalid _id format" )
+    await updateData(url + '?_id='+ "qwertyuioplkjhgfdsazxcvb", {})
+    assert.strictEqual(result.error, "Invalid _id format" )
 }
 
 
 async function testActivateLocation(){
-    const url = BASE_URL + '/pickupLocation';
+    const url = BASE_URL + '/pickupLocations';
     body = {  
         address : "123 RPI Rd.",
         contactInfo : "123-456-7890",
@@ -339,8 +394,8 @@ async function testActivateLocation(){
         active : true
     };
     result = await postData(url, body);
-    assert.strictEqual(result.message, 'pickup location successfully created');
-    const insertedIdOne = result.pickupLocation;
+    assert.strictEqual(result.message, 'item added successfully');
+    const insertedIdOne = result.item;
 
     body = {  
         address : "321 RPI Rd.",
@@ -348,22 +403,29 @@ async function testActivateLocation(){
         name : "Commons Dinning hall",
     };
     result = await postData(url, body);
-    assert.strictEqual(result.message, 'pickup location successfully created');
-    const insertedIdTwo = result.pickupLocation;
+    assert.strictEqual(result.message, 'item added successfully');
+    const insertedIdTwo = result.item;
     result = await postData(BASE_URL + '/activateLocation', {_id: insertedIdTwo})
     // check that the active flag was removed from the first id
     result = await fetchData(BASE_URL + '/pickupLocations?_id='+ insertedIdOne)
-    assert.strictEqual(result.foundPickupLocations[0].active, false )
+    assert.strictEqual(result.foundItems[0].active, false )
     // check the active flag was set to true for the second id
     result = await fetchData(BASE_URL + '/pickupLocations?_id='+ insertedIdTwo)
-    assert.strictEqual(result.foundPickupLocations[0].active, true )
+    assert.strictEqual(result.foundItems[0].active, true )
+}
+
+async function testActivateLocationWithBadId(){
+    result = await postData(BASE_URL + '/activateLocation', {_id: "abababab"})
+    assert.strictEqual(result.error, "Invalid _id format" )
+    result = await postData(BASE_URL + '/activateLocation', {_id: "qwertyuioplkjhgfdsazxcvb"})
+    assert.strictEqual(result.error, "Invalid _id format" )
 }
 
 
 // add 3 menu Items and return thier Ids
 async function fillMenuItems(){
-    let menuIds = []
-    let menuUrl = BASE_URL + '/menuItem';
+    let cart = []
+    let menuUrl = BASE_URL + '/menuItems';
     let body = [
         {
             name: 'Test Burger',
@@ -386,37 +448,53 @@ async function fillMenuItems(){
     ];
     for (let i = 0; i< body.length; i++){
         let result = await postData(menuUrl, body[i]);
-        menuIds.push(result.menuItem)
+        cart.push({_id: result.item, name: body[i].name, price: body[i].price});
     }
-    return menuIds
+    return cart
 }
 
 
-async function testOrderFromCart(){
+async function setUpTestAccount(){
     //setup the account
-    let menuIds = await fillMenuItems()
-    let accountUrl = BASE_URL + '/account';
+    let menuItems = await fillMenuItems()
+    let accountUrl = BASE_URL + '/accounts';
     const body = {  
         name : "the tester",
         email : "theTester@test.com",
         password : "12345",
         phone : "122-333-4444",
         accessLevel : 1, 
-        cart : menuIds
     };
     let result = await postData(accountUrl, body);
-    let accountId = result.account;
+    let insertedId = result.item;
+    const updateItem = {  
+        cart : menuItems
+    };
+    await updateData(accountUrl + '?_id='+ insertedId, updateItem)
+    return {id: insertedId, menu : menuItems}
+}
+
+async function testOrderFromCart(){
+    let account = await setUpTestAccount()
+    let accountId = account.id
     //Create the order
     let orderFromCartUrl = BASE_URL + '/orderFromCart?_id=' + accountId
     result = await postData(orderFromCartUrl, {pickupLocation: '1', tip: 1.2})
     result = await fetchData(BASE_URL + '/orders?_id='+ result.orderId)
-    assert.strictEqual(result.foundOrders[0].costOfItems, 59.99 )
-    assert.strictEqual(result.foundOrders[0].tip, 1.2 )
-    assert.strictEqual(result.foundOrders[0].items.length, menuIds.length )
-    assert.strictEqual(result.foundOrders[0].items[0], menuIds[0] )
-    assert.strictEqual(result.foundOrders[0].items[1], menuIds[1] )
-    assert.strictEqual(result.foundOrders[0].items[2], menuIds[2] )
+    assert.strictEqual(result.foundItems[0].costOfItems, 59.99 )
+    assert.strictEqual(result.foundItems[0].tip, 1.2 )
+    assert.strictEqual(result.foundItems[0].items.length, account.menu.length )
+    assert.strictEqual(result.foundItems[0].items[0]._id,  account.menu[0]._id )
+    assert.strictEqual(result.foundItems[0].items[1]._id,  account.menu[1]._id )
+    assert.strictEqual(result.foundItems[0].items[2]._id,  account.menu[2]._id )
+}
 
+
+async function testOrderFromCartnWithBadId(){
+    result = await postData(BASE_URL + '/orderFromCart' + '?_id=' + "abababab")
+    assert.strictEqual(result.error, "Invalid _id format" )
+    result = await postData(BASE_URL + '/orderFromCart' +'?_id=' + "qwertyuioplkjhgfdsazxcvb")
+    assert.strictEqual(result.error, "Invalid _id format" )
 }
 
 async function clearTestDB(){
@@ -446,25 +524,37 @@ async function clearTestDB(){
 async function runTests(){
     // We only want to run the tests on the test database 
     assert.strictEqual(process.env.DATABASE, TEST_DB)
-    
+
     await testPostMenuItem()
     await testPostEmptyMenuItem()
     await testPostIncompleteMenuItem()
     await testUpdateMenuItem()
+    await testMenuItemWithBadId()
+
     await testPostOrder()
     await testPostEmptyOrder()
     await testPostIncompleteOrder()
     await testUpdateOrder()
+    await testOrderWithBadId()
+
+
     await testPostAccount()
     await testPostEmptyAccount()
     await testPostIncompleteAccount()
     await testUpdateAccount()
+    await testAccountWithBadId()
+
     await testPostPickupLocaion()
     await testPostEmptyPickupLocation()
     await testPostIncompletePickupLocation()
-    await testUpdatePickupLocation()
+    await testUpdatePickupLocation() 
+    await testPickupLocationWithBadId()
+
     await testActivateLocation()
-    await testOrderFromCart()
+    await testActivateLocationWithBadId()
+
+    await testOrderFromCart() 
+    await testOrderFromCartnWithBadId()
     console.log("all tests passed")
     //await clearTestDB()
 }
