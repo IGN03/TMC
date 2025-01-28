@@ -11,6 +11,8 @@ import {
   Alert,
   Platform 
 } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
@@ -42,9 +44,8 @@ const PaymentButton = ({
   );
 };
 
-
-
-export default function CartScreen() {
+// Cart Screen Component
+function CartScreen() {
   const [isCartModalVisible, setCartModalVisible] = useState(false);
   const [isNewModalVisible, setIsNewModalVisible] = useState(false);
   const [isPaymentMethodModalVisible, setIsPaymentMethodModalVisible] = useState(false);
@@ -88,80 +89,79 @@ export default function CartScreen() {
   };
 
   const backtoOrderTotal = () => {  
-      setIsPaymentMethodModalVisible(false);
-      setIsNewModalVisible(true);
-    }
+    setIsPaymentMethodModalVisible(false);
+    setIsNewModalVisible(true);
+  };
 
   // New functions for payment modal
   const openPaymentModal = () => {
-      setIsNewModalVisible(false);
-      setIsPaymentMethodModalVisible(true);
-    };
+    setIsNewModalVisible(false);
+    setIsPaymentMethodModalVisible(true);
+  };
+
+  const handleDone = () => {  
+    setIsPaymentConfirmationModalVisible(false);
+    navigation.navigate('explore');
+  };
+
+  const handleCompletePayment = () => { 
+    setIsPaymentMethodModalVisible(false);
+    setIsPaymentConfirmationModalVisible(true);
+  };
+
+  async function handlePayment() {
+    try {
+      const response = await fetch('http://localhost:3000/orderFromCart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: 10000, // Amount in cents
+          name: 'Order Payment'
+        })
+      });
   
-    const handleDone = () => {  
-      setIsPaymentConfirmationModalVisible(false);
-      navigation.navigate('explore');
-    }
-  
-    const handleCompletePayment = () => { 
-      setIsPaymentMethodModalVisible(false);
-      setIsPaymentConfirmationModalVisible(true);
-    }
-    async function handlePayment() {
-      try {
-        const response = await fetch('http://localhost:3000/orderFromCart', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            amount: 10000, // Amount in cents
-            name: 'Order Payment'
-          })
-        });
-    
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to create payment link');
-        }
-    
-        const data = await response.json();
-        console.log('Payment link created:', data);
-    
-        // Create a clickable link element
-        const paymentLink = document.createElement('a');
-        paymentLink.href = data.paymentUrl;
-        paymentLink.textContent = 'Proceed to Payment';
-        paymentLink.className = 'payment-link';
-        paymentLink.target = '_blank'; // Open in new tab
-        paymentLink.rel = 'noopener noreferrer'; // Security best practice
-    
-        // Optional: Append to a specific container or replace existing content
-        const paymentContainer = document.getElementById('payment-container');
-        if (paymentContainer) {
-          paymentContainer.innerHTML = ''; 
-          paymentContainer.appendChild(paymentLink);
-        } else {
-          // Fallback to direct navigation if no container found
-          window.location.href = data.paymentUrl;
-        }
-      } catch (error) {
-        console.error('Error during payment process:', error);
-        const errorContainer = document.getElementById('error-container');
-        if (errorContainer) {
-          errorContainer.textContent = `Payment Error: ${error.message}`;
-          errorContainer.style.color = 'red';
-        }
-        throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create payment link');
       }
+  
+      const data = await response.json();
+      console.log('Payment link created:', data);
+  
+      // Create a clickable link element
+      const paymentLink = document.createElement('a');
+      paymentLink.href = data.paymentUrl;
+      paymentLink.textContent = 'Proceed to Payment';
+      paymentLink.className = 'payment-link';
+      paymentLink.target = '_blank'; // Open in new tab
+      paymentLink.rel = 'noopener noreferrer'; // Security best practice
+  
+      // Optional: Append to a specific container or replace existing content
+      const paymentContainer = document.getElementById('payment-container');
+      if (paymentContainer) {
+        paymentContainer.innerHTML = ''; 
+        paymentContainer.appendChild(paymentLink);
+      } else {
+        // Fallback to direct navigation if no container found
+        window.location.href = data.paymentUrl;
+      }
+    } catch (error) {
+      console.error('Error during payment process:', error);
+      const errorContainer = document.getElementById('error-container');
+      if (errorContainer) {
+        errorContainer.textContent = `Payment Error: ${error.message}`;
+        errorContainer.style.color = 'red';
+      }
+      throw error;
     }
+  }
 
   const closePaymentMethodModal = () => {
     setIsPaymentMethodModalVisible(false);
     setSelectedPaymentMethod('');
   };
-
-  
 
   return (
     <ThemedView style={{ flex: 1 }}>
@@ -237,155 +237,173 @@ export default function CartScreen() {
 
       {/* Order Modal */}
       <Modal
-      animationType="slide"
-      transparent={true}
-      visible={isNewModalVisible}
-      onRequestClose={closeNewModal}
-    >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalText}>Order Total: </Text>
-          <Text style={styles.modalSubtitle}>Subtotal: $5.99 </Text>
-          <Text style={styles.modalSubtitle}>Tax: $0.53 </Text>
-          <Text style={styles.modalSubtitle}>Total: $6.52 </Text>
-          <Text style={styles.modalSubtitle}> </Text>
-          <Image source={require('@/assets/images/TMC_Logo.png')} style={styles.tmcLogo} />
-          
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={backToOrderSummary}
-          >
-            <Text style={styles.buttonText}>Back to Order Summary</Text>
-          </TouchableOpacity>
+        animationType="slide"
+        transparent={true}
+        visible={isNewModalVisible}
+        onRequestClose={closeNewModal}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>Order Total: </Text>
+            <Text style={styles.modalSubtitle}>Subtotal: $5.99 </Text>
+            <Text style={styles.modalSubtitle}>Tax: $0.53 </Text>
+            <Text style={styles.modalSubtitle}>Total: $6.52 </Text>
+            <Text style={styles.modalSubtitle}> </Text>
+            <Image source={require('@/assets/images/TMC_Logo.png')} style={styles.tmcLogo} />
+            
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={backToOrderSummary}
+            >
+              <Text style={styles.buttonText}>Back to Order Summary</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.payButton}
-            onPress={openPaymentModal}
-          >
-            <Text style={styles.buttonText}>Pay Now</Text>
-          </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.payButton}
+              onPress={openPaymentModal}
+            >
+              <Text style={styles.buttonText}>Pay Now</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
 
-     {/* Payment Method Selection Modal */}
-<Modal
-  animationType="slide"
-  transparent={true}
-  visible={isPaymentMethodModalVisible}
-  onRequestClose={closePaymentMethodModal}
->
-  <View style={styles.modalContainer}>
-    <View style={styles.modalContent}>
-      <Text style={styles.modalText}>Select Payment Method</Text>
-      
-      <View style={styles.paymentButtonsContainer}>
-        <PaymentButton
-          onPress={() => {
-            setSelectedPaymentMethod('Apple Pay');
-            console.log('Apple Pay selected');
-          }}
-          logo={require('@/assets/images/applepaylogo.png')}
-          style={styles.applePayButton}
-          testID="apple-pay-button"
-        />
-        <PaymentButton
-          onPress={() => {
-            setSelectedPaymentMethod('Google Pay');
-            console.log('Google Pay selected');
-          }}
-          logo={require('@/assets/images/googlepaylogo.svg.png')}
-          style={styles.googlePayButton}
-          testID="google-pay-button"
-        />
-        <PaymentButton
-          onPress={() => {
-            setSelectedPaymentMethod('Venmo');
-            console.log('Venmo selected');
-          }}
-          logo={require('@/assets/images/Venmo_logo.png')}
-          style={styles.venmoButton}
-          testID="venmo-button"
-        />
-        <PaymentButton
-          onPress={() => {
-            setSelectedPaymentMethod('Credit Card');
-            console.log('Credit Card selected');
-          }}
-          logo={require('@/assets/images/6963703.png')}
-          style={styles.creditCardButton}
-          testID="credit-card-button"
-        />
-      </View>
-      
-      <Text style={styles.totalText}>Total: $6.52</Text>
-      
-      <TouchableOpacity 
-        style={[styles.touchableButton, styles.backButton1]} 
-        onPress={backtoOrderTotal}
+      {/* Payment Method Selection Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isPaymentMethodModalVisible}
+        onRequestClose={closePaymentMethodModal}
       >
-        <Text style={styles.buttonText1}>Back to Order Total</Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity
-        style={[
-          styles.touchableButton, 
-          styles.payButton1,
-          !selectedPaymentMethod && { opacity: 0.5 }
-        ]}
-        onPress={handlePayment}
-
-        disabled={!selectedPaymentMethod}
-      >
-        <Text style={styles.buttonText1}>Complete Payment</Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity 
-        style={[styles.touchableButton, styles.payButton1, { backgroundColor: '#FF3B30' }]} 
-        onPress={closePaymentMethodModal}
-      >
-        <Text style={styles.buttonText1}>Cancel</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-</Modal>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>Select Payment Method</Text>
+            
+            <View style={styles.paymentButtonsContainer}>
+              <PaymentButton
+                onPress={() => {
+                  setSelectedPaymentMethod('Apple Pay');
+                  console.log('Apple Pay selected');
+                }}
+                logo={require('@/assets/images/applepaylogo.png')}
+                style={styles.applePayButton}
+                testID="apple-pay-button"
+              />
+              <PaymentButton
+                onPress={() => {
+                  setSelectedPaymentMethod('Google Pay');
+                  console.log('Google Pay selected');
+                }}
+                logo={require('@/assets/images/googlepaylogo.svg.png')}
+                style={styles.googlePayButton}
+                testID="google-pay-button"
+              />
+              <PaymentButton
+                onPress={() => {
+                  setSelectedPaymentMethod('Venmo');
+                  console.log('Venmo selected');
+                }}
+                logo={require('@/assets/images/Venmo_logo.png')}
+                style={styles.venmoButton}
+                testID="venmo-button"
+              />
+              <PaymentButton
+                onPress={() => {
+                  setSelectedPaymentMethod('Credit Card');
+                  console.log('Credit Card selected');
+                }}
+                logo={require('@/assets/images/6963703.png')}
+                style={styles.creditCardButton}
+                testID="credit-card-button"
+              />
+            </View>
+            
+            <Text style={styles.totalText}>Total: $6.52</Text>
+            
+            <TouchableOpacity 
+              style={[styles.touchableButton, styles.backButton1]} 
+              onPress={backtoOrderTotal}
+            >
+              <Text style={styles.buttonText1}>Back to Order Total</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.touchableButton, 
+                styles.payButton1,
+                !selectedPaymentMethod && { opacity: 0.5 }
+              ]}
+              onPress={handlePayment}
+              disabled={!selectedPaymentMethod}
+            >
+              <Text style={styles.buttonText1}>Complete Payment</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.touchableButton, styles.payButton1, { backgroundColor: '#FF3B30' }]} 
+              onPress={closePaymentMethodModal}
+            >
+              <Text style={styles.buttonText1}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Payment Confirmation Modal */}
       <Modal
-  animationType="slide"
-  transparent={true}
-  visible={isPaymentConfirmationModalVisible}
-  onRequestClose={handleDone}
->
-  <View style={styles.modalContainer}>
-    <View style={styles.modalContent}>
-      <Text style={styles.modalText}>Payment Confirmation</Text>
-      <Text style={styles.modalSubtitle}>Order #12345</Text>
-      <Text style={styles.modalSubtitle}>Total Paid: $6.52</Text>
-      <Text style={styles.modalSubtitle}>Payment Method: {selectedPaymentMethod}</Text>
-      <Text style={styles.modalSubtitle}>Date: {new Date().toLocaleDateString()}</Text>
-      <Text style={styles.modalSubtitle}> </Text>
-      
-      <Image source={require('@/assets/images/TMC_Logo.png')} style={styles.tmcLogo} />
-      <Text style={[styles.modalSubtitle, styles.successMessage]}>
-        Payment Successful! Thank you for your order.
-      </Text>
-      <Text style={styles.modalSubtitle}>
-        Your order will be ready for pickup in approximately 15-20 minutes.
-      </Text>
-      
-      <TouchableOpacity 
-        onPress={handleDone}
-        style={styles.doneButton}
-        activeOpacity={0.7}
+        animationType="slide"
+        transparent={true}
+        visible={isPaymentConfirmationModalVisible}
+        onRequestClose={handleDone}
       >
-        <Text style={styles.doneButtonText}>Done</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-</Modal>
-     
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>Payment Confirmation</Text>
+            <Text style={styles.modalSubtitle}>Order #12345</Text>
+            <Text style={styles.modalSubtitle}>Total Paid: $6.52</Text>
+            <Text style={styles.modalSubtitle}>Payment Method: {selectedPaymentMethod}</Text>
+            <Text style={styles.modalSubtitle}>Date: {new Date().toLocaleDateString()}</Text>
+            <Text style={styles.modalSubtitle}> </Text>
+            
+            <Image source={require('@/assets/images/TMC_Logo.png')} style={styles.tmcLogo} />
+            <Text style={[styles.modalSubtitle, styles.successMessage]}>
+              Payment Successful! Thank you for your order.
+            </Text>
+            <Text style={styles.modalSubtitle}>
+              Your order will be ready for pickup in approximately 15-20 minutes.
+            </Text>
+            
+            <TouchableOpacity 
+              onPress={handleDone}
+              style={styles.doneButton}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.doneButtonText}>Done</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ThemedView>
+  );
+}
+
+// Create a stack navigator
+const Stack = createNativeStackNavigator();
+
+
+// Remove the NavigationContainer wrapper
+export default function CartNavigator() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen 
+        name="Cart" 
+        component={CartScreen}
+        options={{
+          headerShown: false
+        }}
+      />
+      {/* Add other screens here if needed */}
+    </Stack.Navigator>
   );
 }
 
