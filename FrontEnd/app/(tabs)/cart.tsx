@@ -543,11 +543,14 @@ const styles = StyleSheet.create({
   },
 
   touchableButton: {
-    width: '20%',
-    padding: 15,
-    borderRadius: 8,
-    marginVertical: 5,
-    alignItems: 'center',
+    width: '70%',
+  minWidth: 120,
+  maxWidth: 250,
+  padding: 15,
+  borderRadius: 8,
+  marginVertical: 5,
+  alignItems: 'center',
+  justifyContent: 'center',
   },
 
   backButton: {
