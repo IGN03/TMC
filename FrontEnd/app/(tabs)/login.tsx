@@ -8,7 +8,7 @@ import { ThemedText } from '@/components/ThemedText';
 import axios from 'axios'
 // import * as fs from 'fs'; // files
 
-const fs = require('fs');
+//const fs = require('fs');
 
 ///Global stuff
   const Stack = createStackNavigator();
@@ -16,12 +16,12 @@ const fs = require('fs');
   const BASE_URL = 'http://localhost:3000';
   const ACC_URL = '../account.txt';
   
+  
 
-  //Read acc_id from account.txt
-  let user_id;
+  //Read acc_id from account.json and set LoggedIn to be true
 
 //update JSON with /app/(tabs)/login.tsx
-  async function updateAccountsJSON(accountId) {
+async function updateAccountsJSON(accountId) {
     try {
       // Fetch new account data from API
       console.log("Account: " + accountId)
@@ -50,7 +50,7 @@ const fs = require('fs');
       console.error('Error updating accounts JSON:', error);
     }
   
-  }
+}
 
 //LOGIN VVVVVVVVVVV
   const LoginScreen = ({ navigation, setLoggedIn }) => {
@@ -94,11 +94,11 @@ const fs = require('fs');
         const find_account =  await axios.get(`${BASE_URL}/accounts?email=${email}&password=${password}`)
         if(!!find_account.data){
           showPopup(`Logging into:  ${email}`);
-          user_id = "6733ca61a2deb84e51d74db6"// hardcoded for testing purposes(merge issues caused some  functions to work inccoreectly)
+          //user_id = "6733ca61a2deb84e51d74db6"// hardcoded for testing purposes(merge issues caused some  functions to work inccoreectly)
           // user_id = find_account.data._id;
           let output = user_id;          
           //Update the JSON file with the user's account ID
-          await updateAccountsJSON(user_id);
+          updateAccountsJSON(user_id);
           //SUCCESSFULL LOGIN!
           setLoggedIn(true);
           navigation.replace('Profile');
@@ -274,8 +274,9 @@ const fs = require('fs');
         const find_account =  await axios.get(`${BASE_URL}/accounts?email=${email}&password=${password}`)
         let user_id = find_account.data.items[0]._id;
         
+        //set accounts Json
+        updateAccountsJSON(user_id);
 
-        await updateAccountsJSON(user_id);
         showPopup(`Account created for: email: ${email} password: ${password},  name: ${name}, phoneNumber: ${phoneNumber}`);
         }
         setLoggedIn = true;
@@ -429,7 +430,7 @@ const AuthScreen = () => {
   const [loggedIn, setLoggedIn] = useState(false);
 
   return (
-    <NavigationContainer independent={true}>
+
       <Stack.Navigator initialRouteName="Login">
         {!loggedIn ? (
           <>
@@ -444,7 +445,7 @@ const AuthScreen = () => {
           <Stack.Screen name="Profile" component={ProfileScreen} />
         )}
       </Stack.Navigator>
-    </NavigationContainer>
+    
   );
 };
 
