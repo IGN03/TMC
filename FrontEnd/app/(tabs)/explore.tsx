@@ -169,8 +169,10 @@ export default function MenuScreen() {
   };
 
 // Sidebar component in MenuScreen
-const Sidebar = ({ cart, isVisible, onClose, navigation }) => 
+const Sidebar = ({ cart, isVisible, onClose }) => 
 { 
+  const navigation = useNavigation();
+
   // Navigation to cart/checkout page
   const closeAndNavigate = () => 
   {
@@ -259,7 +261,6 @@ const Sidebar = ({ cart, isVisible, onClose, navigation }) =>
           onClose={() => setIsSidebarVisible(false)}
           isVisible={isSidebarVisible}
           cart={cart}
-          navigation={navigation}
         />
       )}
 
@@ -493,7 +494,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFA726',
     alignItems: 'center',
   },
-
   // For Sidebar
   overlay: {
     flex: 1,
