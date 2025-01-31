@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
   },
 
   touchableButton: {
-    width: '70%',
+  width: '70%',
   minWidth: 120,
   maxWidth: 250,
   padding: 15,
@@ -555,18 +555,25 @@ const styles = StyleSheet.create({
 
   backButton: {
     backgroundColor: '#007AFF',
-    padding: 12,
+    width: '70%',
+    minWidth: 120,
+    maxWidth: 250,
+    padding: 15,
     borderRadius: 8,
-    width: '20%',
-    marginBottom: 10,
+    marginVertical: 5,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   payButton: {
     backgroundColor: '#34C759',
-    padding: 12,
+    width: '70%',
+    minWidth: 120,
+    maxWidth: 250,
+    padding: 15,
     borderRadius: 8,
-    width: '20%',
+    marginVertical: 5,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   
   buttonText: {
