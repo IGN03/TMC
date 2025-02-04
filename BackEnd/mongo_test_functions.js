@@ -2,7 +2,7 @@ const { MongoClient, ServerApiVersion } = require("mongodb");
 const assert = require("assert");
 require('dotenv').config();
 //const axios = require('axios');
-const BASE_URL = "https://tmc-85hb.onrender.com/"
+const BASE_URL = "https://tmc-85hb.onrender.com"
 
 const TEST_DB = 'tmc_uat'
 
