@@ -6,52 +6,47 @@ import { createStackNavigator } from '@react-navigation/stack';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import axios from 'axios'
-// import * as fs from 'fs'; // files
 
-//const fs = require('fs');
+
 
 ///Global stuff
   const Stack = createStackNavigator();
+  const BASE_URL = 'https://tmc-85hb.onrender.com';
+  const ACC_URL = '../account.json';
+  
+  const fs = require('fs').promises;// read stuff
+  //loggedIn checker
+  
 
-  const BASE_URL = 'http://localhost:3000';
-  const ACC_URL = '../account.txt';
-  
-  
 
   //Read acc_id from account.json and set LoggedIn to be true
 
-//update JSON with /app/(tabs)/login.tsx
-async function updateAccountsJSON(accountId) {
-    try {
-      // Fetch new account data from API
-      console.log("Account: " + accountId)
-      const find_account = await axios.get(`${BASE_URL}/accounts?_id=${accountId}`);
-      //let newAccount = find_account.data[0].json();
-      let newAccount = {
-        _id : "6733ca61a2deb84e51d74db6"
-      };
-      //ERR message
-      if (!newAccount) {
-        console.error('No account data found for the given ID.');
-        return;
-      }
-  
-      // Replace the file content with the new account data
-      fs.writeFile(ACC_URL, "6733ca61a2deb84e51d74db6", (err) => {
-        if (err) {
-          console.error('Error writing to file:', err);
-        } else {
-          console.log('File written successfully!');
-        }
-      });
-
-      console.log('Account txt updated successfully!');
+//READJSONFILE
+async function readJSON(file_url){
+  try{
+    const data = await fs.readFile(file_url, "utf8");
+    //read data
+    return JSON.parse(data);
     } catch (error) {
-      console.error('Error updating accounts JSON:', error);
+      console.error(`Error reading ${file_url}: ${error}`);
+      return {};
     }
-  
 }
 
+
+//update JSON with /app/(tabs)/login.tsx
+async function loginAccountsJSON(accountId) {
+  const acc_data = await readJSON(ACC_URL);
+  acc_data.id = accountId;
+  //update token when available.
+  
+  //update original file.
+  try{
+  await fs.writeFile( ACC_URL, JSON.stringify(acc_data, null, 2));
+  } catch (error) {
+    console.error("accounts.json was not updated: ", error);
+  }
+}
 //LOGIN VVVVVVVVVVV
   const LoginScreen = ({ navigation, setLoggedIn }) => {
     const [email, setEmail] = useState('');
@@ -96,12 +91,13 @@ async function updateAccountsJSON(accountId) {
           showPopup(`Logging into:  ${email}`);
           //user_id = "6733ca61a2deb84e51d74db6"// hardcoded for testing purposes(merge issues caused some  functions to work inccoreectly)
           // user_id = find_account.data._id;
-          let output = user_id;          
+          //let output = user_id;          
           //Update the JSON file with the user's account ID
-          updateAccountsJSON(user_id);
+          //updateAccountsJSON(user_id);
           //SUCCESSFULL LOGIN!
           setLoggedIn(true);
           navigation.replace('Profile');
+        
 
         }
         else if(!!find_email.data){//good Email bad password
@@ -275,10 +271,11 @@ async function updateAccountsJSON(accountId) {
         let user_id = find_account.data.items[0]._id;
         
         //set accounts Json
-        updateAccountsJSON(user_id);
+        //updateAccountsJSON(user_id);
 
         showPopup(`Account created for: email: ${email} password: ${password},  name: ${name}, phoneNumber: ${phoneNumber}`);
         }
+        //send verification  email 
         setLoggedIn = true;
         
     };
@@ -391,8 +388,15 @@ async function updateAccountsJSON(accountId) {
     }
     const handleLogout = async () => {
       //empty Logout File
-      fs.writeFile(ACC_URL, '');
-      user_id = "";
+      const acc_data = await readJSON(ACC_URL); 
+      acc_data.id = "test";
+      acc_data.token = "test";
+      //write changes
+      try{
+        await fs.writeFile( ACC_URL, JSON.stringify(acc_data, null, 2));
+        } catch (error) {
+          console.error("accounts.json was not updated: ", error);
+      }
       return;
     };
   
@@ -428,7 +432,6 @@ async function updateAccountsJSON(accountId) {
 // navigation for all pages made
 const AuthScreen = () => {
   const [loggedIn, setLoggedIn] = useState(false);
-
   return (
 
       <Stack.Navigator initialRouteName="Login">
