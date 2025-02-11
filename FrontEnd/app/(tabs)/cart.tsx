@@ -9,7 +9,8 @@ import {
   Button,
   Linking,
   Alert,
-  Platform 
+  Platform,
+  ScrollView
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -46,6 +47,7 @@ const PaymentButton = ({
 
 // Cart Screen Component
 function CartScreen() {
+  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   const [isCartModalVisible, setCartModalVisible] = useState(false);
   const [isNewModalVisible, setIsNewModalVisible] = useState(false);
   const [isPaymentMethodModalVisible, setIsPaymentMethodModalVisible] = useState(false);
@@ -83,14 +85,14 @@ function CartScreen() {
     setIsNewModalVisible(false);
   };
 
-  const backToOrderSummary = () => {
+  const backToCheckoutOptions = () => {
     setIsNewModalVisible(false);
     setCartModalVisible(true);
   };
 
   const backtoOrderTotal = () => {  
     setIsPaymentMethodModalVisible(false);
-    setIsNewModalVisible(true);
+    setIsSidebarVisible(true);
   };
 
   // New functions for payment modal
@@ -108,6 +110,9 @@ function CartScreen() {
     setIsPaymentMethodModalVisible(false);
     setIsPaymentConfirmationModalVisible(true);
   };
+
+  const openSidebar = () => setIsSidebarVisible(true);
+  const closeSidebar = () => setIsSidebarVisible(false);
 
   async function handlePayment() {
     try {
@@ -158,6 +163,107 @@ function CartScreen() {
     }
   }
 
+  const Sidebar = ({ cart, isVisible, onClose }) => 
+{ 
+  const navigation = useNavigation();
+
+  const [currentView, setCurrentView] = useState('cart');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
+
+  // Calculate totals from cart data
+  const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const tax = subtotal * 0.08875; // NYS 8.875% tax rate
+  const total = subtotal + tax;
+
+  const handlePayNow = () => {
+    setCurrentView('payment');
+  };
+
+  const handleBackToOrder = () => {
+    setCurrentView('cart');
+  };
+
+  return (
+    <Modal transparent={true} animationType="slide" visible={isVisible}>
+      <View style={styles.overlay}>
+        <View style={styles.sidebarContainer}>
+
+        {/* Sidebar text */}
+          <ThemedText style={styles.sidebarTitle}>Your Cart</ThemedText>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {cart.length > 0 ? (
+              cart.map((item) => (
+                <View key={item._id} style={styles.cartItemContainer}>
+                  <View style={styles.cartItemDetails}>
+                    <ThemedText style={styles.item}>
+                      {item.quantity}x {item.name}
+                    </ThemedText>
+                    <ThemedText style={styles.cartItemPrice}>
+                      ${(item.price * item.quantity).toFixed(2)}
+                    </ThemedText>
+                  </View>
+                  <TouchableOpacity
+                        style={styles.removeButton}
+                        onPress={() => handleRemoveFromCart(item._id)}
+                  >
+                    <Icon name="trash" size={20} color="#FF0000" />
+                  </TouchableOpacity>
+                </View>
+              ))
+            ) : (
+              <ThemedText>No items in the cart.</ThemedText>
+            )}
+
+            <View style={styles.divider} />
+            
+            {/* Sidebar calculations for the total */}
+            <View style={styles.totalsContainer}>
+              <ThemedText>Subtotal: ${subtotal.toFixed(2)}</ThemedText>
+              <ThemedText>Tax: ${tax.toFixed(2)}</ThemedText>
+              <ThemedText style={styles.totalText}>
+                Total: ${total.toFixed(2)}
+              </ThemedText>
+            </View>
+            
+            <View style={styles.bottomPadding} />
+          </ScrollView>
+
+          {/* Sidebar buttons */}
+          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <ThemedText style={styles.closeButtonText}>X</ThemedText>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => {
+                closeSidebar();
+                backToCheckoutOptions();
+              }}
+            >
+              <Text style={styles.buttonText}>Back to Checkout Options</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+              style={styles.payButton}
+              onPress={() => {
+                closeSidebar();
+                openPaymentModal();
+              }}
+            >
+              <Text style={styles.buttonText}>Pay Now</Text>
+          </TouchableOpacity>
+
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+// Divider component (just a bold horizontal line)
+  const Divider = () => (
+  <View style={styles.divider} />
+  );
+
   const closePaymentMethodModal = () => {
     setIsPaymentMethodModalVisible(false);
     setSelectedPaymentMethod('');
@@ -165,6 +271,11 @@ function CartScreen() {
 
   return (
     <ThemedView style={{ flex: 1 }}>
+      <Sidebar 
+      cart={cart} 
+      isVisible={isSidebarVisible} 
+      onClose={closeSidebar} 
+      />
       <ParallaxScrollView
         headerBackgroundColor={{ light: '#FFA726', dark: '#FF7043' }}
         headerImage={
@@ -209,7 +320,7 @@ function CartScreen() {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalText}>Checkout Options:</Text>
+            <Text style={styles.modalText}>Checkout Options</Text>
             
             <TouchableOpacity 
               onPress={closeModalAndNavigate}
@@ -219,7 +330,10 @@ function CartScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity 
-              onPress={openNewModal}
+              onPress={() => {
+                closeModal();
+                openSidebar();
+              }}
               style={[styles.touchableButton, { backgroundColor: 'blue' }]}
             >
               <Text style={styles.buttonText}>Complete Order</Text>
@@ -230,39 +344,6 @@ function CartScreen() {
               style={[styles.touchableButton, { backgroundColor: 'gray' }]}
             >
               <Text style={styles.buttonText}>View Payment Options</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Order Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isNewModalVisible}
-        onRequestClose={closeNewModal}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalText}>Order Total: </Text>
-            <Text style={styles.modalSubtitle}>Subtotal: $5.99 </Text>
-            <Text style={styles.modalSubtitle}>Tax: $0.53 </Text>
-            <Text style={styles.modalSubtitle}>Total: $6.52 </Text>
-            <Text style={styles.modalSubtitle}> </Text>
-            <Image source={require('@/assets/images/TMC_Logo.png')} style={styles.tmcLogo} />
-            
-            <TouchableOpacity 
-              style={styles.backButton}
-              onPress={backToOrderSummary}
-            >
-              <Text style={styles.buttonText}>Back to Order Summary</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.payButton}
-              onPress={openPaymentModal}
-            >
-              <Text style={styles.buttonText}>Pay Now</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -641,5 +722,83 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+    // For Sidebar
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  // Container for the sidebar component
+  sidebarContainer: {
+    width: '70%',
+    height: '70%',
+    backgroundColor: '#D88A3C',
+    borderRadius: 10,
+    padding: 40,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  // Formatting for the title of the sidebar
+  sidebarTitle: {
+    padding: 10,
+    textAlign: 'center',
+    fontWeight: 'bold',
+    fontSize: 32,
+  },
+  // Formatting for each item's counter and name in sidebar
+  item: {
+    top: 20,
+    left: 20,
+  },
+  // Button that closes the sidebar
+  closeButton: {
+    position: 'absolute',
+    marginTop: 5,
+    top: 0,
+    right: 10,
+    padding: 5,
+    borderRadius: 10,
+    backgroundColor: '#000000',
+    alignItems: 'center',
+  },
+  // The 'X' in the close button
+  closeButtonText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#e5dccf',
+  },
+  // Formatting of the total text in the sidebar
+  totalText: {
+    fontWeight: 'bold',
+  },
+  // Container for all the items in sidebar
+  cartItemContainer: {
+    marginBottom: 15,
+  },
+  // Formatting of each item's text in sidebar
+  cartItemDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  // Formatting of each item's price in sidebar
+  cartItemPrice: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'right',
+    width: 100,
+    top: 17,
+  },
+  // A bold horizontal line
+  divider: {
+    top: 5,
+    height: 3, 
+    backgroundColor: '#ccc', 
+    marginVertical: 10, 
   },
 });
