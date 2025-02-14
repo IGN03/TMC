@@ -536,6 +536,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#000000',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   // The 'X' in the close button
   closeButtonText: {
@@ -563,7 +564,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'right',
     width: 100,
-    top: 17,
+    top: 20,
   },
   // Some space/padding
   bottomPadding: {

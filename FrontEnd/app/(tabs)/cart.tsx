@@ -233,26 +233,27 @@ function CartScreen() {
             <ThemedText style={styles.closeButtonText}>X</ThemedText>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => {
-                closeSidebar();
-                backToCheckoutOptions();
-              }}
-            >
-              <Text style={styles.buttonText}>Back to Checkout Options</Text>
-          </TouchableOpacity>
+          <View style={styles.buttonWrapper}>
+            <TouchableOpacity 
+                style={styles.backButton}
+                onPress={() => {
+                  closeSidebar();
+                  backToCheckoutOptions();
+                }}
+              >
+                <Text style={styles.buttonText}>Back to Checkout Options</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity 
-              style={styles.payButton}
-              onPress={() => {
-                closeSidebar();
-                openPaymentModal();
-              }}
-            >
-              <Text style={styles.buttonText}>Pay Now</Text>
-          </TouchableOpacity>
-
+            <TouchableOpacity 
+                style={styles.payButton}
+                onPress={() => {
+                  closeSidebar();
+                  openPaymentModal();
+                }}
+              >
+                <Text style={styles.buttonText}>Pay Now</Text>
+            </TouchableOpacity>
+            </View>
         </View>
       </View>
     </Modal>
@@ -635,9 +636,23 @@ const styles = StyleSheet.create({
   },
 
   backButton: {
+    position: 'center',
     backgroundColor: '#007AFF',
     width: '70%',
-    minWidth: 120,
+    minWidth: 200,
+    maxWidth: 250, 
+    padding: 15,
+    borderRadius: 8,
+    marginVertical: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  payButton: {
+    position: 'center',
+    backgroundColor: '#34C759',
+    width: '70%',
+    minWidth: 200,
     maxWidth: 250,
     padding: 15,
     borderRadius: 8,
@@ -645,16 +660,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  payButton: {
-    backgroundColor: '#34C759',
-    width: '70%',
-    minWidth: 120,
-    maxWidth: 250,
-    padding: 15,
-    borderRadius: 8,
-    marginVertical: 5,
+
+  buttonWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 20,
   },
   
   buttonText: {
@@ -718,11 +730,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   doneButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
   },
+
     // For Sidebar
   overlay: {
     flex: 1,
@@ -742,6 +756,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
+    display: 'flex',
+    justifyContent: 'flex-start',
   },
   // Formatting for the title of the sidebar
   sidebarTitle: {
@@ -792,7 +808,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'right',
     width: 100,
-    top: 17,
+    top: 20,
   },
   // A bold horizontal line
   divider: {
