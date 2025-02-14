@@ -5,26 +5,34 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
-import axios from 'axios'
-
+import axios from 'axios';
+//file stuff
+import account from '../accounts.json';
+import * as fs from 'fs';
 
 
 ///Global stuff
   const Stack = createStackNavigator();
   const BASE_URL = 'https://tmc-85hb.onrender.com';
-  const ACC_URL = '../account.json';
-  
-  const fs = require('fs').promises;// read stuff
+  const ACC_URL = '../accounts.json';
   //loggedIn checker
-  
+  const [loggedIn, setLoggedIn] = useState(false);
 
 
-  //Read acc_id from account.json and set LoggedIn to be true
+//Read acc_id from account.json and set LoggedIn to be true
+
+async function AccStatusOnLoad( setLoggedIn){
+  if (account.id != null){// add token later
+    setLoggedIn = true;
+  }
+}
+
+AccStatusOnLoad(setLoggedIn);
 
 //READJSONFILE
 async function readJSON(file_url){
   try{
-    const data = await fs.readFile(file_url, "utf8");
+    const data = await fs.readFile(file_url, 'utf-8');
     //read data
     return JSON.parse(data);
     } catch (error) {
@@ -37,12 +45,13 @@ async function readJSON(file_url){
 //update JSON with /app/(tabs)/login.tsx
 async function loginAccountsJSON(accountId) {
   const acc_data = await readJSON(ACC_URL);
-  acc_data.id = accountId;
+  acc_data.id = 'accountId';
   //update token when available.
+  
   
   //update original file.
   try{
-  await fs.writeFile( ACC_URL, JSON.stringify(acc_data, null, 2));
+  await fs.writeFileSync( ACC_URL, JSON.stringify(acc_data, null, 2));
   } catch (error) {
     console.error("accounts.json was not updated: ", error);
   }
@@ -90,14 +99,14 @@ async function loginAccountsJSON(accountId) {
         if(!!find_account.data){
           showPopup(`Logging into:  ${email}`);
           //user_id = "6733ca61a2deb84e51d74db6"// hardcoded for testing purposes(merge issues caused some  functions to work inccoreectly)
-          // user_id = find_account.data._id;
+          user_id = find_account.data._id;
           //let output = user_id;          
           //Update the JSON file with the user's account ID
-          //updateAccountsJSON(user_id);
+          loginAccountsJSON(user_id);
           //SUCCESSFULL LOGIN!
           setLoggedIn(true);
           navigation.replace('Profile');
-        
+          
 
         }
         else if(!!find_email.data){//good Email bad password
@@ -271,7 +280,8 @@ async function loginAccountsJSON(accountId) {
         let user_id = find_account.data.items[0]._id;
         
         //set accounts Json
-        //updateAccountsJSON(user_id);
+        
+        loginAccountsJSON(user_id);
 
         showPopup(`Account created for: email: ${email} password: ${password},  name: ${name}, phoneNumber: ${phoneNumber}`);
         }
@@ -378,6 +388,14 @@ async function loginAccountsJSON(accountId) {
       inputTextColor: colorScheme === 'dark' ? '#FFF' : '#000',
     };
 
+    async function getAccountData( name, phoneNumber){
+      const json_data = await readJSON(ACC_URL);
+      var id = json_data.id; 
+      const find_account =  await axios.get(`${BASE_URL}/accounts?_id=${id}`);
+      name = find_account.name;
+      phoneNumber = find_account.phoneNumber;
+    }
+
     const handleSave = async () => {
       const payload = {
         name: name,
@@ -393,7 +411,7 @@ async function loginAccountsJSON(accountId) {
       acc_data.token = "test";
       //write changes
       try{
-        await fs.writeFile( ACC_URL, JSON.stringify(acc_data, null, 2));
+        await fs.writeFileSync( ACC_URL, JSON.stringify(acc_data, null, 2));
         } catch (error) {
           console.error("accounts.json was not updated: ", error);
       }
@@ -431,7 +449,6 @@ async function loginAccountsJSON(accountId) {
 
 // navigation for all pages made
 const AuthScreen = () => {
-  const [loggedIn, setLoggedIn] = useState(false);
   return (
 
       <Stack.Navigator initialRouteName="Login">
@@ -448,7 +465,6 @@ const AuthScreen = () => {
           <Stack.Screen name="Profile" component={ProfileScreen} />
         )}
       </Stack.Navigator>
-    
   );
 };
 
