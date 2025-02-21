@@ -5,7 +5,7 @@ type CartProviderProps = {
 }
 
 type CartItem = {
-    id: string
+    _id: string
     quantity: number
     name: string
 }
@@ -36,7 +36,7 @@ export function CartProvider({ children }: CartProviderProps) {
                 return [...currItems, {id, name, quantity: 1}]
             } else {
                 return currItems.map(item => {
-                    if (item.id === id){
+                    if (item._id === _id){
                         return { ...item, quantity: item.quantity + 1}
                     }
                     else {
@@ -49,8 +49,8 @@ export function CartProvider({ children }: CartProviderProps) {
 
     function decreaseCartQuantity(id: string) {
         setCartItems(currItems => {
-            if (currItems.find(item => item.id === id)?.quantity === 1) {
-                return currItems.filter(item => item.id !== id)
+            if (currItems.find(item => item._id === _id)?.quantity === 1) {
+                return currItems.filter(item => item._id !== _id)
             } else {
                 return currItems.map(item => {
                     if (item.id === id){
@@ -66,7 +66,7 @@ export function CartProvider({ children }: CartProviderProps) {
 
     function removeFromCart(id: string) {
         setCartItems(currItems => {
-            return currItems.filter(items => items.id !== id)
+            return currItems.filter(items => items._id !== _id)
         })
     }
     return (
