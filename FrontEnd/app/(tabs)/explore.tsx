@@ -8,11 +8,16 @@ import { useIsFocused, useNavigation, NavigationContainer } from '@react-navigat
 import Icon from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
 import { CartProvider } from '../components/CartContext';
+import { useCart } from '../components/CartContext';
 
 const BACKEND_URL = 'https://tmc-85hb.onrender.com';
 
 // MenuItem object
-const MenuItem = ({ itemId, itemName, itemDescription, itemPrice, itemImage, itemAllergen, onQuantityChange, quantities }) => (
+const MenuItem = ({ itemId, itemName, itemDescription, itemPrice, itemImage, itemAllergen }) => {
+  const { getItemQuantity, increaseCartQuantity, decreaseCartQuantity } = useCart();
+  const quantity = getItemQuantity(itemId);
+
+  return (
   <ThemedView style={styles.itemContainer}>
     {/* Menu Item text */}
     <View style={styles.textContainer}>
@@ -25,11 +30,11 @@ const MenuItem = ({ itemId, itemName, itemDescription, itemPrice, itemImage, ite
       
       {/* Menu Item quantity buttons and counter */}
       <View style={styles.quantityContainer}>
-        <TouchableOpacity style={styles.button} onPress={() => onQuantityChange(itemId, -1)}>
+        <TouchableOpacity style={styles.button} onPress={() => decreaseCartQuantity(itemId, -1)}>
           <ThemedText>-</ThemedText>
         </TouchableOpacity>
-        <ThemedText>{quantities[itemId] || 0}</ThemedText>
-        <TouchableOpacity style={styles.button} onPress={() => onQuantityChange(itemId, 1)}>
+        <ThemedText>{quantity}</ThemedText>
+        <TouchableOpacity style={styles.button} onPress={() => increaseCartQuantity(itemId, 1)}>
           <ThemedText>+</ThemedText>
         </TouchableOpacity>
       </View>
@@ -41,15 +46,13 @@ const MenuItem = ({ itemId, itemName, itemDescription, itemPrice, itemImage, ite
       style={styles.foodImage}
     />
   </ThemedView>
-);
+  );
+};
 
 // The components of the MenuScreen
 export default function MenuScreen() {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [quantities, setQuantities] = useState({});
-  const [selectedItems, setSelectedItems] = useState([]);
+  const [menuItems, setMenuItems] = useState([]);
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
-  const [cart, setCart] = useState([]);
   const [categorizedItems, setCategorizedItems] = useState({
     appetizers: [],
     mainDishes: [],
@@ -67,14 +70,6 @@ export default function MenuScreen() {
         const items = Array.isArray(response.data.foundItems) ? response.data.foundItems : [];
         setMenuItems(items);
         
-        // Initialize quantities state with all items set to 0
-        const initialQuantities = {};
-        items.forEach(item => 
-        {
-          initialQuantities[item._id] = 0;
-        });
-        setQuantities(initialQuantities);
-
         // Categorize items
         const categorized = 
         {
@@ -100,154 +95,92 @@ export default function MenuScreen() {
     loadMenuItems();
   }, []);
 
-  // Function that updates an item's quantity when the counter actually changes
-  const handleQuantityChange = (itemId, change) => 
-  {
-    setQuantities(prev => 
+  // Sidebar component in MenuScreen
+  const Sidebar = ({ isVisible, onClose }) => 
+  { 
+    const navigation = useNavigation();
+    const { cartItems, removeFromCart } = useCart();
+
+    // Navigation to cart/checkout page
+    const closeAndNavigate = () => 
     {
-      const newQuantities = 
-      {
-        ...prev,
-        [itemId]: Math.max(0, (prev[itemId] || 0) + change)
-      };
+      onClose();
+      navigation.navigate('cart');
+    };
 
-      // Update selected items
-      const updatedSelectedItems = [];
-      Object.entries(newQuantities).forEach(([key, value]) => 
-      {
-        for (let i = 0; i < value; i++) 
-        {
-          updatedSelectedItems.push(key);
-        }
-      });
-      setSelectedItems(updatedSelectedItems);
+    // Calculate totals from cart data
+    const subtotal = cartItems.reduce((total, item) => {
+      const menuItem = menuItems.find(menu => menu._id === item.id);
+      return total + (menuItem?.price * item.quantity);
+    }, 0);
+    const tax = subtotal * 0.08875; // NYS 8.875% tax rate
+    const total = subtotal + tax;
 
-      return newQuantities;
-    });
-  };
+    return (
+      <CartProvider>
+        <Modal transparent={true} animationType="slide" visible={isVisible}>
+          <View style={styles.overlay}>
+            <View style={styles.sidebarContainer}>
 
-  // Function to add items to the cart
-  const handleAddToCart = () => 
-  {
-    const updatedCart = [...cart];
-    menuItems.forEach(menuItem => 
-    {
-      const qty = quantities[menuItem._id] || 0;
-      if (qty > 0) 
-      {
-        const existingItemIndex = updatedCart.findIndex(cartItem => cartItem._id === menuItem._id);
-        if (existingItemIndex >= 0) 
-        {
-          updatedCart[existingItemIndex].quantity += qty;
-        } 
-        else 
-        {
-          updatedCart.push({
-            _id: menuItem._id,
-            name: menuItem.name,
-            quantity: qty,
-            price: menuItem.price
-          });
-        }
-      }
-    });
-
-    setCart(updatedCart);
-
-    // Reset quantities
-    const resetQuantities = {};
-    menuItems.forEach(item => {
-      resetQuantities[item._id] = 0;
-    });
-    setQuantities(resetQuantities);
-    setIsSidebarVisible(true);
-  };
-
-  // Function that handles removing entire items from the cart
-  const handleRemoveFromCart = (itemId) => 
-  {
-    setCart(prevCart => prevCart.filter(item => item._id !== itemId));
-  };
-
-// Sidebar component in MenuScreen
-const Sidebar = ({ cart, isVisible, onClose }) => 
-{ 
-  const navigation = useNavigation();
-
-  // Navigation to cart/checkout page
-  const closeAndNavigate = () => 
-  {
-    onClose();
-    navigation.navigate('cart');
-  };
-
-  // Calculate totals from cart data
-  const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-  const tax = subtotal * 0.08875; // NYS 8.875% tax rate
-  const total = subtotal + tax;
-
-  return (
-    <CartProvider>
-      <Modal transparent={true} animationType="slide" visible={isVisible}>
-        <View style={styles.overlay}>
-          <View style={styles.sidebarContainer}>
-
-          {/* Sidebar text */}
-            <ThemedText style={styles.sidebarTitle}>Your Cart</ThemedText>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {cart.length > 0 ? (
-                cart.map((item) => (
-                  <View key={item._id} style={styles.cartItemContainer}>
-                    <View style={styles.cartItemDetails}>
-                      <ThemedText style={styles.item}>
-                        {item.quantity}x {item.name}
-                      </ThemedText>
-                      <ThemedText style={styles.cartItemPrice}>
-                        ${(item.price * item.quantity).toFixed(2)}
-                      </ThemedText>
+            {/* Sidebar text */}
+              <ThemedText style={styles.sidebarTitle}>Your Cart</ThemedText>
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {cartItems.length > 0 ? (
+                  cartItems.map((item) => {
+                    const menuItem = menuItems.find(menu => menu._id === item.id);
+                    return(
+                    <View key={item._id} style={styles.cartItemContainer}>
+                      <View style={styles.cartItemDetails}>
+                        <ThemedText style={styles.item}>
+                          {item.quantity}x {item.name}
+                        </ThemedText>
+                        <ThemedText style={styles.cartItemPrice}>
+                          ${((menuItem?.price || 0) * item.quantity).toFixed(2)}
+                        </ThemedText>
+                      </View>
+                      <TouchableOpacity
+                            style={styles.removeButton}
+                            onPress={() => removeFromCart(item._id)}
+                      >
+                        <Icon name="trash" size={20} color="#FF0000" />
+                      </TouchableOpacity>
                     </View>
-                    <TouchableOpacity
-                          style={styles.removeButton}
-                          onPress={() => handleRemoveFromCart(item._id)}
-                    >
-                      <Icon name="trash" size={20} color="#FF0000" />
-                    </TouchableOpacity>
-                  </View>
-                ))
-              ) : (
-                <ThemedText>No items in the cart.</ThemedText>
-              )}
+                  );
+                })
+                ) : (
+                  <ThemedText>No items in the cart.</ThemedText>
+                )}
 
-              <View style={styles.divider} />
-              
-              {/* Sidebar calculations for the total */}
-              <View style={styles.totalsContainer}>
-                <ThemedText>Subtotal: ${subtotal.toFixed(2)}</ThemedText>
-                <ThemedText>Tax: ${tax.toFixed(2)}</ThemedText>
-                <ThemedText style={styles.totalText}>
-                  Total: ${total.toFixed(2)}
-                </ThemedText>
-              </View>
-              
-              <View style={styles.bottomPadding} />
-            </ScrollView>
+                <View style={styles.divider} />
+                
+                {/* Sidebar calculations for the total */}
+                <View style={styles.totalsContainer}>
+                  <ThemedText>Subtotal: ${subtotal.toFixed(2)}</ThemedText>
+                  <ThemedText>Tax: ${tax.toFixed(2)}</ThemedText>
+                  <ThemedText style={styles.totalText}>
+                    Total: ${total.toFixed(2)}
+                  </ThemedText>
+                </View>
+                
+                <View style={styles.bottomPadding} />
+              </ScrollView>
 
-            {/* Sidebar buttons */}
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <ThemedText style={styles.closeButtonText}>X</ThemedText>
-            </TouchableOpacity>
-
-            {cart.length > 0 && (
-              <TouchableOpacity onPress={closeAndNavigate} style={styles.navigateButton}>
-                <ThemedText style={styles.navigateText}>Checkout</ThemedText>
+              {/* Sidebar buttons */}
+              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                <ThemedText style={styles.closeButtonText}>X</ThemedText>
               </TouchableOpacity>
-            )}
+
+              {cartItems.length > 0 && (
+                <TouchableOpacity onPress={closeAndNavigate} style={styles.navigateButton}>
+                  <ThemedText style={styles.navigateText}>Checkout</ThemedText>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
-        </View>
-      </Modal>
-    </CartProvider>
-  );
-};
+        </Modal>
+      </CartProvider>
+    );
+  };
   
   // Divider component (just a bold horizontal line)
   const Divider = () => (
@@ -261,10 +194,8 @@ const Sidebar = ({ cart, isVisible, onClose }) =>
       <View style={styles.container}>
         {isSidebarVisible && (
           <Sidebar 
-            selectedItems={selectedItems} 
             onClose={() => setIsSidebarVisible(false)}
             isVisible={isSidebarVisible}
-            cart={cart}
           />
         )}
 
@@ -298,8 +229,6 @@ const Sidebar = ({ cart, isVisible, onClose }) =>
                   itemDescription={item.description}
                   itemPrice={item.price}
                   itemAllergen={item.allergen}
-                  onQuantityChange={handleQuantityChange}
-                  quantities={quantities}
                 />
               ))}
             </ThemedView>
@@ -317,8 +246,6 @@ const Sidebar = ({ cart, isVisible, onClose }) =>
                   itemDescription={item.description}
                   itemPrice={item.price}
                   itemAllergen={item.allergen}
-                  onQuantityChange={handleQuantityChange}
-                  quantities={quantities}
                 />
               ))}
             </ThemedView>
@@ -336,8 +263,6 @@ const Sidebar = ({ cart, isVisible, onClose }) =>
                   itemDescription={item.description}
                   itemPrice={item.price}
                   itemAllergen={item.allergen}
-                  onQuantityChange={handleQuantityChange}
-                  quantities={quantities}
                 />
               ))}
             </ThemedView>
@@ -350,11 +275,6 @@ const Sidebar = ({ cart, isVisible, onClose }) =>
                 <Icon name="shopping-cart" size={36} color="#FFF" style={styles.cartIcon}/>
               </View>
             </TouchableOpacity>
-            {Object.values(quantities).some(q => q > 0) && (
-              <TouchableOpacity style={styles.fixedButton} onPress={handleAddToCart}>
-                <ThemedText>Add to Cart</ThemedText>
-              </TouchableOpacity>
-            )}
           </View>
         </View>
       </View>
