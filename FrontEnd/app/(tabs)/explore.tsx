@@ -7,6 +7,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { useIsFocused, useNavigation, NavigationContainer } from '@react-navigation/native'
 import Icon from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
+import { CartProvider } from '../components/CartContext';
 
 const BACKEND_URL = 'https://tmc-85hb.onrender.com';
 
@@ -186,63 +187,65 @@ const Sidebar = ({ cart, isVisible, onClose }) =>
   const total = subtotal + tax;
 
   return (
-    <Modal transparent={true} animationType="slide" visible={isVisible}>
-      <View style={styles.overlay}>
-        <View style={styles.sidebarContainer}>
+    <CartProvider>
+      <Modal transparent={true} animationType="slide" visible={isVisible}>
+        <View style={styles.overlay}>
+          <View style={styles.sidebarContainer}>
 
-        {/* Sidebar text */}
-          <ThemedText style={styles.sidebarTitle}>Your Cart</ThemedText>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {cart.length > 0 ? (
-              cart.map((item) => (
-                <View key={item._id} style={styles.cartItemContainer}>
-                  <View style={styles.cartItemDetails}>
-                    <ThemedText style={styles.item}>
-                      {item.quantity}x {item.name}
-                    </ThemedText>
-                    <ThemedText style={styles.cartItemPrice}>
-                      ${(item.price * item.quantity).toFixed(2)}
-                    </ThemedText>
+          {/* Sidebar text */}
+            <ThemedText style={styles.sidebarTitle}>Your Cart</ThemedText>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {cart.length > 0 ? (
+                cart.map((item) => (
+                  <View key={item._id} style={styles.cartItemContainer}>
+                    <View style={styles.cartItemDetails}>
+                      <ThemedText style={styles.item}>
+                        {item.quantity}x {item.name}
+                      </ThemedText>
+                      <ThemedText style={styles.cartItemPrice}>
+                        ${(item.price * item.quantity).toFixed(2)}
+                      </ThemedText>
+                    </View>
+                    <TouchableOpacity
+                          style={styles.removeButton}
+                          onPress={() => handleRemoveFromCart(item._id)}
+                    >
+                      <Icon name="trash" size={20} color="#FF0000" />
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity
-                        style={styles.removeButton}
-                        onPress={() => handleRemoveFromCart(item._id)}
-                  >
-                    <Icon name="trash" size={20} color="#FF0000" />
-                  </TouchableOpacity>
-                </View>
-              ))
-            ) : (
-              <ThemedText>No items in the cart.</ThemedText>
-            )}
+                ))
+              ) : (
+                <ThemedText>No items in the cart.</ThemedText>
+              )}
 
-            <View style={styles.divider} />
-            
-            {/* Sidebar calculations for the total */}
-            <View style={styles.totalsContainer}>
-              <ThemedText>Subtotal: ${subtotal.toFixed(2)}</ThemedText>
-              <ThemedText>Tax: ${tax.toFixed(2)}</ThemedText>
-              <ThemedText style={styles.totalText}>
-                Total: ${total.toFixed(2)}
-              </ThemedText>
-            </View>
-            
-            <View style={styles.bottomPadding} />
-          </ScrollView>
+              <View style={styles.divider} />
+              
+              {/* Sidebar calculations for the total */}
+              <View style={styles.totalsContainer}>
+                <ThemedText>Subtotal: ${subtotal.toFixed(2)}</ThemedText>
+                <ThemedText>Tax: ${tax.toFixed(2)}</ThemedText>
+                <ThemedText style={styles.totalText}>
+                  Total: ${total.toFixed(2)}
+                </ThemedText>
+              </View>
+              
+              <View style={styles.bottomPadding} />
+            </ScrollView>
 
-          {/* Sidebar buttons */}
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <ThemedText style={styles.closeButtonText}>X</ThemedText>
-          </TouchableOpacity>
-
-          {cart.length > 0 && (
-            <TouchableOpacity onPress={closeAndNavigate} style={styles.navigateButton}>
-              <ThemedText style={styles.navigateText}>Checkout</ThemedText>
+            {/* Sidebar buttons */}
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <ThemedText style={styles.closeButtonText}>X</ThemedText>
             </TouchableOpacity>
-          )}
+
+            {cart.length > 0 && (
+              <TouchableOpacity onPress={closeAndNavigate} style={styles.navigateButton}>
+                <ThemedText style={styles.navigateText}>Checkout</ThemedText>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+    </CartProvider>
   );
 };
   
@@ -254,106 +257,108 @@ const Sidebar = ({ cart, isVisible, onClose }) =>
   // Format frontend
   return (
     // Sidebar status
-    <View style={styles.container}>
-      {isSidebarVisible && (
-        <Sidebar 
-          selectedItems={selectedItems} 
-          onClose={() => setIsSidebarVisible(false)}
-          isVisible={isSidebarVisible}
-          cart={cart}
-        />
-      )}
+    <CartProvider>
+      <View style={styles.container}>
+        {isSidebarVisible && (
+          <Sidebar 
+            selectedItems={selectedItems} 
+            onClose={() => setIsSidebarVisible(false)}
+            isVisible={isSidebarVisible}
+            cart={cart}
+          />
+        )}
 
-      {/* Menu Section */}
-      <View style={[styles.contentContainer, { marginRight: isSidebarVisible }]}>
-        <ParallaxScrollView
-          showsVerticalScrollIndicator={true}
-          showsHorizontalScrollIndicator={false}
-          headerBackgroundColor={{ light: '#FFA726', dark: '#FF7043' }}
-          headerImage={
-            <Image
-              source={require('@/assets/images/Trans_TMC_Logo.png')}
-              style={styles.restaurantLogo}
-            />
-          }>
-          
-          <ThemedView style={styles.titleContainer}>
-            <ThemedText type="title">Today's Menu</ThemedText>
-          </ThemedView>
-
-          <Divider />
-
-          {/* Appetizers Section */}
-          <ThemedView style={styles.sectionContainer}>
-            <ThemedText style={styles.subtitle} type="subtitle">Appetizers</ThemedText>
-            {categorizedItems.appetizers.map((item) => (
-              <MenuItem
-                key={item._id}
-                itemId={item._id}
-                itemName={item.name}
-                itemDescription={item.description}
-                itemPrice={item.price}
-                itemAllergen={item.allergen}
-                onQuantityChange={handleQuantityChange}
-                quantities={quantities}
+        {/* Menu Section */}
+        <View style={[styles.contentContainer, { marginRight: isSidebarVisible }]}>
+          <ParallaxScrollView
+            showsVerticalScrollIndicator={true}
+            showsHorizontalScrollIndicator={false}
+            headerBackgroundColor={{ light: '#FFA726', dark: '#FF7043' }}
+            headerImage={
+              <Image
+                source={require('@/assets/images/Trans_TMC_Logo.png')}
+                style={styles.restaurantLogo}
               />
-            ))}
-          </ThemedView>
+            }>
+            
+            <ThemedView style={styles.titleContainer}>
+              <ThemedText type="title">Today's Menu</ThemedText>
+            </ThemedView>
 
-          <Divider />
+            <Divider />
 
-          {/* Main Dishes Section */}
-          <ThemedView style={styles.sectionContainer}>
-            <ThemedText style={styles.subtitle} type="subtitle">Main Dishes</ThemedText>
-            {categorizedItems.mainDishes.map((item) => (
-              <MenuItem
-                key={item._id}
-                itemId={item._id}
-                itemName={item.name}
-                itemDescription={item.description}
-                itemPrice={item.price}
-                itemAllergen={item.allergen}
-                onQuantityChange={handleQuantityChange}
-                quantities={quantities}
-              />
-            ))}
-          </ThemedView>
+            {/* Appetizers Section */}
+            <ThemedView style={styles.sectionContainer}>
+              <ThemedText style={styles.subtitle} type="subtitle">Appetizers</ThemedText>
+              {categorizedItems.appetizers.map((item) => (
+                <MenuItem
+                  key={item._id}
+                  itemId={item._id}
+                  itemName={item.name}
+                  itemDescription={item.description}
+                  itemPrice={item.price}
+                  itemAllergen={item.allergen}
+                  onQuantityChange={handleQuantityChange}
+                  quantities={quantities}
+                />
+              ))}
+            </ThemedView>
 
-          <Divider />
+            <Divider />
 
-          {/* Desserts Section */}
-          <ThemedView style={styles.sectionContainer}>
-            <ThemedText style={styles.subtitle} type="subtitle">Desserts</ThemedText>
-            {categorizedItems.desserts.map((item) => (
-              <MenuItem
-                key={item._id}
-                itemId={item._id}
-                itemName={item.name}
-                itemDescription={item.description}
-                itemPrice={item.price}
-                itemAllergen={item.allergen}
-                onQuantityChange={handleQuantityChange}
-                quantities={quantities}
-              />
-            ))}
-          </ThemedView>
-        </ParallaxScrollView>
+            {/* Main Dishes Section */}
+            <ThemedView style={styles.sectionContainer}>
+              <ThemedText style={styles.subtitle} type="subtitle">Main Dishes</ThemedText>
+              {categorizedItems.mainDishes.map((item) => (
+                <MenuItem
+                  key={item._id}
+                  itemId={item._id}
+                  itemName={item.name}
+                  itemDescription={item.description}
+                  itemPrice={item.price}
+                  itemAllergen={item.allergen}
+                  onQuantityChange={handleQuantityChange}
+                  quantities={quantities}
+                />
+              ))}
+            </ThemedView>
 
-        {/* View Cart button and Sidebar access */}
-        <View style={styles.fixedButtonContainer}>
-          <TouchableOpacity style={styles.viewCartButton} onPress={() => setIsSidebarVisible(true)}>
-            <View style={styles.iconContainer}>
-              <Icon name="shopping-cart" size={36} color="#FFF" style={styles.cartIcon}/>
-            </View>
-          </TouchableOpacity>
-          {Object.values(quantities).some(q => q > 0) && (
-            <TouchableOpacity style={styles.fixedButton} onPress={handleAddToCart}>
-              <ThemedText>Add to Cart</ThemedText>
+            <Divider />
+
+            {/* Desserts Section */}
+            <ThemedView style={styles.sectionContainer}>
+              <ThemedText style={styles.subtitle} type="subtitle">Desserts</ThemedText>
+              {categorizedItems.desserts.map((item) => (
+                <MenuItem
+                  key={item._id}
+                  itemId={item._id}
+                  itemName={item.name}
+                  itemDescription={item.description}
+                  itemPrice={item.price}
+                  itemAllergen={item.allergen}
+                  onQuantityChange={handleQuantityChange}
+                  quantities={quantities}
+                />
+              ))}
+            </ThemedView>
+          </ParallaxScrollView>
+
+          {/* View Cart button and Sidebar access */}
+          <View style={styles.fixedButtonContainer}>
+            <TouchableOpacity style={styles.viewCartButton} onPress={() => setIsSidebarVisible(true)}>
+              <View style={styles.iconContainer}>
+                <Icon name="shopping-cart" size={36} color="#FFF" style={styles.cartIcon}/>
+              </View>
             </TouchableOpacity>
-          )}
+            {Object.values(quantities).some(q => q > 0) && (
+              <TouchableOpacity style={styles.fixedButton} onPress={handleAddToCart}>
+                <ThemedText>Add to Cart</ThemedText>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </View>
-    </View>
+    </CartProvider>
   );
 }
 
