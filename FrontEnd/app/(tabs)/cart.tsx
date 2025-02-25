@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { 
   Image, 
   StyleSheet, 
@@ -19,6 +19,10 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import axios from 'axios';
+import { CartProvider } from '../components/CartContext';
+import { useCart } from '../components/CartContext';
+
+const BACKEND_URL = 'https://tmc-85hb.onrender.com';
 
 // Custom PaymentButton component
 const PaymentButton = ({ 
@@ -53,19 +57,17 @@ function CartScreen() {
   const [isPaymentMethodModalVisible, setIsPaymentMethodModalVisible] = useState(false);
   const [isPaymentConfirmationModalVisible, setIsPaymentConfirmationModalVisible] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
-  const [cart, setCart] = useState([]);
   const isFocused = useIsFocused();
   const navigation = useNavigation();
   const url = 'http://localhost:3000';
-  const isCartEmpty = cart.length === 0;
 
   useEffect(() => {
-    if (isFocused && isCartEmpty) {
+    if (isFocused) {
       setCartModalVisible(true);
     } else {
       setCartModalVisible(false);
     }
-  }, [isFocused, isCartEmpty]);
+  }, [isFocused]);
 
   const closeModal = () => {
     setCartModalVisible(false);
@@ -163,17 +165,11 @@ function CartScreen() {
     }
   }
 
-  const Sidebar = ({ cart, isVisible, onClose }) => 
-{ 
-  const navigation = useNavigation();
-
-  const [currentView, setCurrentView] = useState('cart');
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
-
-  // Calculate totals from cart data
-  const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-  const tax = subtotal * 0.08875; // NYS 8.875% tax rate
-  const total = subtotal + tax;
+  // Sidebar component in MenuScreen
+  const Sidebar = ({ isVisible, onClose }) => 
+  { 
+    const navigation = useNavigation();
+    const { cartItems, removeFromCart } = useCart();
 
   const handlePayNow = () => {
     setCurrentView('payment');
@@ -183,82 +179,95 @@ function CartScreen() {
     setCurrentView('cart');
   };
 
-  return (
-    <Modal transparent={true} animationType="slide" visible={isVisible}>
-      <View style={styles.overlay}>
-        <View style={styles.sidebarContainer}>
+    // Calculate totals from cart data
+    const subtotal = cartItems.reduce((total, item) => {
+      const menuItem = menuItems.find(menu => menu._id === item.id);
+      return total + (menuItem?.price * item.quantity);
+    }, 0);
+    const tax = subtotal * 0.08875; // NYS 8.875% tax rate
+    const total = subtotal + tax;
 
-        {/* Sidebar text */}
-          <ThemedText style={styles.sidebarTitle}>Your Cart</ThemedText>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {cart.length > 0 ? (
-              cart.map((item) => (
-                <View key={item._id} style={styles.cartItemContainer}>
-                  <View style={styles.cartItemDetails}>
-                    <ThemedText style={styles.item}>
-                      {item.quantity}x {item.name}
-                    </ThemedText>
-                    <ThemedText style={styles.cartItemPrice}>
-                      ${(item.price * item.quantity).toFixed(2)}
-                    </ThemedText>
-                  </View>
-                  <TouchableOpacity
-                        style={styles.removeButton}
-                        onPress={() => handleRemoveFromCart(item._id)}
-                  >
-                    <Icon name="trash" size={20} color="#FF0000" />
-                  </TouchableOpacity>
+    return (
+      <CartProvider>
+        <Modal transparent={true} animationType="slide" visible={isVisible}>
+          <View style={styles.overlay}>
+            <View style={styles.sidebarContainer}>
+
+            {/* Sidebar text */}
+              <ThemedText style={styles.sidebarTitle}>Your Cart</ThemedText>
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {cartItems.length > 0 ? (
+                  cartItems.map((item) => {
+                    const menuItem = menuItems.find(menu => menu._id === item.id);
+                    return(
+                    <View key={item._id} style={styles.cartItemContainer}>
+                      <View style={styles.cartItemDetails}>
+                        <ThemedText style={styles.item}>
+                          {item.quantity}x {item.name}
+                        </ThemedText>
+                        <ThemedText style={styles.cartItemPrice}>
+                          ${((menuItem?.price || 0) * item.quantity).toFixed(2)}
+                        </ThemedText>
+                      </View>
+                      <TouchableOpacity
+                            style={styles.removeButton}
+                            onPress={() => removeFromCart(item.id)}
+                      >
+                        <Icon name="trash" size={20} color="#FF0000" />
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })
+                ) : (
+                  <ThemedText>No items in the cart.</ThemedText>
+                )}
+
+                <View style={styles.divider} />
+                
+                {/* Sidebar calculations for the total */}
+                <View style={styles.totalsContainer}>
+                  <ThemedText>Subtotal: ${subtotal.toFixed(2)}</ThemedText>
+                  <ThemedText>Tax: ${tax.toFixed(2)}</ThemedText>
+                  <ThemedText style={styles.totalText}>
+                    Total: ${total.toFixed(2)}
+                  </ThemedText>
                 </View>
-              ))
-            ) : (
-              <ThemedText>No items in the cart.</ThemedText>
-            )}
+                
+                <View style={styles.bottomPadding} />
+              </ScrollView>
 
-            <View style={styles.divider} />
-            
-            {/* Sidebar calculations for the total */}
-            <View style={styles.totalsContainer}>
-              <ThemedText>Subtotal: ${subtotal.toFixed(2)}</ThemedText>
-              <ThemedText>Tax: ${tax.toFixed(2)}</ThemedText>
-              <ThemedText style={styles.totalText}>
-                Total: ${total.toFixed(2)}
-              </ThemedText>
+              {/* Sidebar buttons */}
+              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                <ThemedText style={styles.closeButtonText}>X</ThemedText>
+              </TouchableOpacity>
+
+              <View style={styles.buttonWrapper}>
+                <TouchableOpacity 
+                    style={styles.backButton}
+                    onPress={() => {
+                      closeSidebar();
+                      backToCheckoutOptions();
+                    }}
+                  >
+                    <Text style={styles.buttonText}>Back to Checkout Options</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                    style={styles.payButton}
+                    onPress={() => {
+                      closeSidebar();
+                      openPaymentModal();
+                    }}
+                  >
+                    <Text style={styles.buttonText}>Pay Now</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            
-            <View style={styles.bottomPadding} />
-          </ScrollView>
-
-          {/* Sidebar buttons */}
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <ThemedText style={styles.closeButtonText}>X</ThemedText>
-          </TouchableOpacity>
-
-          <View style={styles.buttonWrapper}>
-            <TouchableOpacity 
-                style={styles.backButton}
-                onPress={() => {
-                  closeSidebar();
-                  backToCheckoutOptions();
-                }}
-              >
-                <Text style={styles.buttonText}>Back to Checkout Options</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-                style={styles.payButton}
-                onPress={() => {
-                  closeSidebar();
-                  openPaymentModal();
-                }}
-              >
-                <Text style={styles.buttonText}>Pay Now</Text>
-            </TouchableOpacity>
-            </View>
-        </View>
-      </View>
-    </Modal>
-  );
-};
+          </View>
+        </Modal>
+      </CartProvider>
+    );
+  };
 
 // Divider component (just a bold horizontal line)
   const Divider = () => (
@@ -273,7 +282,6 @@ function CartScreen() {
   return (
     <ThemedView style={{ flex: 1 }}>
       <Sidebar 
-      cart={cart} 
       isVisible={isSidebarVisible} 
       onClose={closeSidebar} 
       />
