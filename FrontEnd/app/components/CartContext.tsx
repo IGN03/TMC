@@ -5,15 +5,16 @@ type CartProviderProps = {
 }
 
 type CartItem = {
-    _id: string
+    id: string
     quantity: number
+    name: string
 }
 
 type CartContext = {
-    getItemQuantity: (_id: string) => number
-    increaseCartQuantity: (_id: string) => void
-    decreaseCartQuantity: (_id: string) => void
-    removeFromCart: (_id: string) => void
+    getItemQuantity: (id: string) => number
+    increaseCartQuantity: (id: string) => void
+    decreaseCartQuantity: (id: string) => void
+    removeFromCart: (id: string) => void
     cartItems: CartItem[]
 }
 const CartContext = createContext({} as CartContext)
@@ -25,17 +26,17 @@ export function useCart() {
 export function CartProvider({ children }: CartProviderProps) {
     const [cartItems, setCartItems] = useState<CartItem[]>([])
     
-    function getItemQuantity(_id: string) {
-        return cartItems.find(item => item._id === _id)?.quantity || 0
+    function getItemQuantity(id: string) {
+        return cartItems.find(item => item.id === id)?.quantity || 0
     }
 
-    function increaseCartQuantity(_id: string) {
+    function increaseCartQuantity(id: string, name: string) {
         setCartItems(currItems => {
-            if (currItems.find(item => item._id === _id) == null) {
-                return [...currItems, {_id, quantity: 1}]
+            if (currItems.find(item => item.id === id) == null) {
+                return [...currItems, {id, name, quantity: 1}]
             } else {
                 return currItems.map(item => {
-                    if (item._id === _id){
+                    if (item.id === id){
                         return { ...item, quantity: item.quantity + 1}
                     }
                     else {
@@ -46,13 +47,13 @@ export function CartProvider({ children }: CartProviderProps) {
         })
     }
 
-    function decreaseCartQuantity(_id: string) {
+    function decreaseCartQuantity(id: string) {
         setCartItems(currItems => {
-            if (currItems.find(item => item._id === _id)?.quantity === 1) {
-                return currItems.filter(item => item._id !== _id)
+            if (currItems.find(item => item.id === id)?.quantity === 1) {
+                return currItems.filter(item => item.id !== id)
             } else {
                 return currItems.map(item => {
-                    if (item._id === _id){
+                    if (item.id === id){
                         return { ...item, quantity: item.quantity - 1}
                     }
                     else {
@@ -63,9 +64,9 @@ export function CartProvider({ children }: CartProviderProps) {
         })
     }
 
-    function removeFromCart(_id: string) {
+    function removeFromCart(id: string) {
         setCartItems(currItems => {
-            return currItems.filter(items => items._id !== _id)
+            return currItems.filter(items => items.id !== id)
         })
     }
     return (

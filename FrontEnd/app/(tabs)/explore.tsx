@@ -30,11 +30,11 @@ const MenuItem = ({ itemId, itemName, itemDescription, itemPrice, itemImage, ite
       
       {/* Menu Item quantity buttons and counter */}
       <View style={styles.quantityContainer}>
-        <TouchableOpacity style={styles.button} onPress={() => decreaseCartQuantity(itemId, -1)}>
+        <TouchableOpacity style={styles.button} onPress={() => decreaseCartQuantity(itemId)}>
           <ThemedText>-</ThemedText>
         </TouchableOpacity>
         <ThemedText>{quantity}</ThemedText>
-        <TouchableOpacity style={styles.button} onPress={() => increaseCartQuantity(itemId, 1)}>
+        <TouchableOpacity style={styles.button} onPress={() => increaseCartQuantity(itemId, itemName)}>
           <ThemedText>+</ThemedText>
         </TouchableOpacity>
       </View>
@@ -140,7 +140,7 @@ export default function MenuScreen() {
                       </View>
                       <TouchableOpacity
                             style={styles.removeButton}
-                            onPress={() => removeFromCart(item._id)}
+                            onPress={() => removeFromCart(item.id)}
                       >
                         <Icon name="trash" size={20} color="#FF0000" />
                       </TouchableOpacity>
