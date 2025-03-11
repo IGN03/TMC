@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react-native';
+import { render, screen, act, waitFor } from '@testing-library/react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '@/app/(tabs)/index';
+
 
 const Tab = createBottomTabNavigator();
 
@@ -15,7 +16,6 @@ const MockNavigator = () => (
 
 describe('HomeScreen', () => {
   it('should render HomeScreen', () => {
-    // Render the HomeScreen component wrapped in the navigator
     render(<MockNavigator />);
     
     let linkElement = screen.getByText("Welcome to Thunder Mountain Curry!");
@@ -38,6 +38,15 @@ describe('HomeScreen', () => {
     
     linkElement = screen.getByText("Now at the Troy Waterfront Farmers Market and in front of the RPI Student Union - follow us to find out when!");
     expect(linkElement).toBeOnTheScreen();
-    
+
+    let element = screen.getByTestId('insta-image')
+    expect(element).toBeOnTheScreen();
+
+    element = screen.getByTestId('facebook-image')
+    expect(element).toBeOnTheScreen();
+
+    element = screen.getByTestId('tmc-image')
+    expect(element).toBeOnTheScreen();
   });
+
 });
