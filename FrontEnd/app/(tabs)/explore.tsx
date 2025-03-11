@@ -129,7 +129,7 @@ export default function MenuScreen() {
                   cartItems.map((item) => {
                     const menuItem = menuItems.find(menu => menu._id === item.id);
                     return(
-                    <View key={item._id} style={styles.cartItemContainer}>
+                    <View key={item.id} style={styles.cartItemContainer}>
                       <View style={styles.cartItemDetails}>
                         <ThemedText style={styles.item}>
                           {item.quantity}x {item.name}
