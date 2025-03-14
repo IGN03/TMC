@@ -21,6 +21,7 @@ export default function HomeScreen() {
         <Image
           source={require('@/assets/images/Trans_TMC_Logo.png')}
           style={styles.restaurantLogo}
+          testID="tmc-image"
         />
       }>
       <ThemedView style={styles.titleContainer}>
@@ -49,12 +50,14 @@ export default function HomeScreen() {
             <Image
               source={require('@/assets/images/Instagram_Glyph_Gradient.png')}  // Replace with your image path
               style={styles.clickableImage}
+              testID="insta-image"
             />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleFaceBookImagePress}>
             <Image
               source={require('@/assets/images/Facebook_Logo_Primary.png')}  // Replace with your image path
               style={styles.clickableImage}
+              testID="facebook-image"
             />
           </TouchableOpacity>
         </ThemedView>
