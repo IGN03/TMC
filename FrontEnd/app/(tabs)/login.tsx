@@ -1,243 +1,192 @@
 import React, { useState } from 'react';
-import { StyleSheet, TextInput, View, Button, Text, TouchableOpacity, Image, useColorScheme,} from 'react-native';
+import { StyleSheet, TextInput, View, Button, Text, TouchableOpacity, Image, useColorScheme } from 'react-native';
 import Modal from 'react-native-modal';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import axios from 'axios';
-//file stuff
-import account from '../accounts.json';
-import * as fs from 'fs';
+import { AuthProvider, useAuth } from '../AuthContext'; // Fixed import
 
+// Global stuff
+const Stack = createStackNavigator();
+const BASE_URL = 'https://tmc-85hb.onrender.com';
 
-///Global stuff
-  const Stack = createStackNavigator();
-  const BASE_URL = 'https://tmc-85hb.onrender.com';
-  const ACC_URL = '../accounts.json';
-  //loggedIn checker
-  const [loggedIn, setLoggedIn] = useState(false);
-
-
-//Read acc_id from account.json and set LoggedIn to be true
-
-async function AccStatusOnLoad( setLoggedIn){
-  if (account.id != null){// add token later
-    setLoggedIn = true;
-  }
-}
-
-AccStatusOnLoad(setLoggedIn);
-
-//READJSONFILE
-async function readJSON(file_url){
-  try{
-    const data = await fs.readFile(file_url, 'utf-8');
-    //read data
-    return JSON.parse(data);
-    } catch (error) {
-      console.error(`Error reading ${file_url}: ${error}`);
-      return {};
-    }
-}
-
-
-//update JSON with /app/(tabs)/login.tsx
-async function loginAccountsJSON(accountId) {
-  const acc_data = await readJSON(ACC_URL);
-  acc_data.id = 'accountId';
-  //update token when available.
+// LOGIN SCREEN
+const LoginScreen = ({ navigation }) => {
+  const { setUser, setLoggedIn } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   
-  
-  //update original file.
-  try{
-  await fs.writeFileSync( ACC_URL, JSON.stringify(acc_data, null, 2));
-  } catch (error) {
-    console.error("accounts.json was not updated: ", error);
-  }
-}
-//LOGIN VVVVVVVVVVV
-  const LoginScreen = ({ navigation, setLoggedIn }) => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-    
-    // Modal state
-    const [isModalVisible, setModalVisible] = useState(false);
-    const [modalContent, setModalContent] = useState('');
+  // Modal state
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [modalContent, setModalContent] = useState('');
 
-    // Function to show the modal popup
-    const showPopup = (content) => {
-      setModalContent(content);
-      setModalVisible(true);
-    };
-
-    const colorScheme = useColorScheme();
-    const colors = {
-      background: colorScheme === 'dark' ? '#FF7043' : '#FFA726',
-      placeholderText: colorScheme === 'dark' ? '#BDBDBD' : '#000000',
-      buttonColor: colorScheme === 'dark' ? '#FF7043' : '#FFA726',
-      inputBackground: colorScheme === 'dark' ? '#333' : '#FFF',
-      inputTextColor: colorScheme === 'dark' ? '#FFF' : '#000',
-    };
-
-
-    const handleLogin = async () => {
-      if (!email && !password) {
-        showPopup('Please fill out both fields');
-      } else if (!email) {
-        showPopup('Please fill out your email');
-      } else if (!password) {
-        showPopup('Please fill out your password');
-      } else if (email.indexOf('@') < 0 || email.indexOf('.') < 0) {
-        showPopup('Please fill out a valid email');
-      } else {
-        // run backend run node mongo_functions.js
-        // Server implementation here
-        const find_email =  await axios.get(`${BASE_URL}/accounts?email=${email}`)
-        const find_account =  await axios.get(`${BASE_URL}/accounts?email=${email}&password=${password}`)
-        if(!!find_account.data){
-          showPopup(`Logging into:  ${email}`);
-          //user_id = "6733ca61a2deb84e51d74db6"// hardcoded for testing purposes(merge issues caused some  functions to work inccoreectly)
-          user_id = find_account.data._id;
-          //let output = user_id;          
-          //Update the JSON file with the user's account ID
-          loginAccountsJSON(user_id);
-          //SUCCESSFULL LOGIN!
-          setLoggedIn(true);
-          navigation.replace('Profile');
-          
-
-        }
-        else if(!!find_email.data){//good Email bad password
-          showPopup(`Email found, Password is invalid`)
-        }
-        else{//bad Email
-          showPopup(`Email not found`)
-        }
-         
-      }
-    };
-
-    const toggleModal = () => {
-      setModalVisible(!isModalVisible);
-    };
-
-    return (
-      <ParallaxScrollView
-        headerBackgroundColor={{ light: '#FFA726', dark: '#FF7043' }}
-        headerImage={
-          <Image
-            source={require('@/assets/images/Trans_TMC_Logo.png')}
-            style={styles.restaurantLogo}
-          />
-    }
-      >
-        <ThemedText type="title">Login</ThemedText>
-
-        <TextInput
-          style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
-          placeholder="Email"
-          placeholderTextColor={colors.placeholderText}
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
-        <View style={styles.passwordContainer}>
-          <TextInput
-            style={[styles.input, { flex: 1, backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
-            placeholder="Password"
-            placeholderTextColor={colors.placeholderText}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
-          />
-          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-            <Text style={styles.showHideText}>{showPassword ? 'Hide' : 'Show'}</Text>
-          </TouchableOpacity>
-        </View>
-
-        <Button title="Login" onPress={handleLogin} color={colors.buttonColor} />
-
-        {/* Sign Up Text */}
-        <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-          <Text style={styles.signUpText}>Don't have an account? Sign up</Text>
-        </TouchableOpacity>
-
-        {/* Modal for Errors */}
-        <Modal
-          isVisible={isModalVisible}
-          onBackdropPress={toggleModal} // Close modal on backdrop press
-          style={styles.modal}
-        >
-          <View style={styles.modalContent}>
-            <Text style={styles.modalText}>{modalContent}</Text>
-            <Button title="Close" onPress={toggleModal} />
-          </View>
-        </Modal>
-      </ParallaxScrollView>
-    );
+  // Function to show the modal popup
+  const showPopup = (content) => {
+    setModalContent(content);
+    setModalVisible(true);
   };
 
-//SIGN UP VVVVVVVV
-  const SignUpScreen = ({ navigation, setLoggedIn }) => {
+  const colorScheme = useColorScheme();
+  const colors = {
+    background: colorScheme === 'dark' ? '#FF7043' : '#FFA726',
+    placeholderText: colorScheme === 'dark' ? '#BDBDBD' : '#000000',
+    buttonColor: colorScheme === 'dark' ? '#FF7043' : '#FFA726',
+    inputBackground: colorScheme === 'dark' ? '#333' : '#FFF',
+    inputTextColor: colorScheme === 'dark' ? '#FFF' : '#000',
+  };
 
-    // Account;
-
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [name, setName] = useState('');
-    const [phoneNumber, setNumber] = useState('');
-
-    
-
-
-    // Modal state
-    const [isModalVisible, setModalVisible] = useState(false);
-    const [modalContent, setModalContent] = useState('');
-
-    // Function to show the modal popup
-    const showPopup = (content) => {
-      setModalContent(content);
-      setModalVisible(true);
-    };
-
-    const colorScheme = useColorScheme();
-    
-    const colors = {
-      background: colorScheme === 'dark' ? '#FF7043' : '#FFA726',
-      placeholderText: colorScheme === 'dark' ? '#BDBDBD' : '#000000',
-      buttonColor: colorScheme === 'dark' ? '#FF7043' : '#FFA726',
-      inputBackground: colorScheme === 'dark' ? '#333' : '#FFF',
-      inputTextColor: colorScheme === 'dark' ? '#FFF' : '#000',
-    };
-
-    function isAllPresent(str) {
-      // Regex to check if a string
-      // contains uppercase, lowercase special character & numeric value
-      var pattern = new RegExp(
-        "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[#$%&*]).+$"
-      );
-
-      if (!str || str.length === 0) {
-        return false;
+  const handleLogin = async () => {
+    if (!email && !password) {
+      showPopup('Please fill out both fields');
+    } else if (!email) {
+      showPopup('Please fill out your email');
+    } else if (!password) {
+      showPopup('Please fill out your password');
+    } else if (email.indexOf('@') < 0 || email.indexOf('.') < 0) {
+      showPopup('Please fill out a valid email');
+    } else {
+      try {
+        // Server implementation here
+        const find_email = await axios.get(`${BASE_URL}/accounts?email=${email}`);
+        const find_account = await axios.get(`${BASE_URL}/accounts?email=${email}&password=${password}`);
+        
+        if (find_account.data && find_account.data.foundItems.length > 0) {
+          showPopup(`Logging into: ${email}`);
+          
+          // SUCCESSFUL LOGIN! - Fixed to set user data and logged in state separately
+          console.log(find_account.data);
+          setUser(find_account.data.foundItems[0]); // Use the first account in search(More than one with test accounts)
+          setLoggedIn(true);
+          navigation.replace('Profile');
+        }
+        else if (find_email.data && find_email.data.foundItems.length > 0) { // good Email bad password
+          showPopup(`Email found, Password is invalid`);
+        }
+        else { // bad Email
+          showPopup(`Email not found`);
+        }
+      } catch (error) {
+        showPopup(`Login error: ${error.message}`);
       }
-      if (pattern.test(str)) {
-        return true
-      } 
-      return false
-      }
-      
-      
-    const handleSignUp = async () => {
+    }
+  };
 
+  const toggleModal = () => {
+    setModalVisible(!isModalVisible);
+  };
+
+  return (
+    <ParallaxScrollView
+      headerBackgroundColor={{ light: '#FFA726', dark: '#FF7043' }}
+      headerImage={
+        <Image
+          source={require('@/assets/images/Trans_TMC_Logo.png')}
+          style={styles.restaurantLogo}
+        />
+      }
+    >
+      <ThemedText type="title">Login</ThemedText>
+
+      <TextInput
+        style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
+        placeholder="Email"
+        placeholderTextColor={colors.placeholderText}
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
+
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={[styles.input, { flex: 1, backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
+          placeholder="Password"
+          placeholderTextColor={colors.placeholderText}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!showPassword}
+        />
+        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+          <Text style={styles.showHideText}>{showPassword ? 'Hide' : 'Show'}</Text>
+        </TouchableOpacity>
+      </View>
+
+      <Button title="Login" onPress={handleLogin} color={colors.buttonColor} />
+
+      {/* Sign Up Text */}
+      <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+        <Text style={styles.signUpText}>Don't have an account? Sign up</Text>
+      </TouchableOpacity>
+
+      {/* Modal for Errors */}
+      <Modal
+        isVisible={isModalVisible}
+        onBackdropPress={toggleModal} // Close modal on backdrop press
+        style={styles.modal}
+      >
+        <View style={styles.modalContent}>
+          <Text style={styles.modalText}>{modalContent}</Text>
+          <Button title="Close" onPress={toggleModal} />
+        </View>
+      </Modal>
+    </ParallaxScrollView>
+  );
+};
+
+// SIGN UP SCREEN
+const SignUpScreen = ({ navigation }) => {
+  const { setUser, setLoggedIn } = useAuth();
+  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState('');
+  const [phoneNumber, setNumber] = useState('');
+
+  // Modal state
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [modalContent, setModalContent] = useState('');
+
+  // Function to show the modal popup
+  const showPopup = (content) => {
+    setModalContent(content);
+    setModalVisible(true);
+  };
+
+  const colorScheme = useColorScheme();
+  
+  const colors = {
+    background: colorScheme === 'dark' ? '#FF7043' : '#FFA726',
+    placeholderText: colorScheme === 'dark' ? '#BDBDBD' : '#000000',
+    buttonColor: colorScheme === 'dark' ? '#FF7043' : '#FFA726',
+    inputBackground: colorScheme === 'dark' ? '#333' : '#FFF',
+    inputTextColor: colorScheme === 'dark' ? '#FFF' : '#000',
+  };
+
+  function isAllPresent(str) {
+    // Regex to check if a string
+    // contains uppercase, lowercase special character & numeric value
+    var pattern = new RegExp(
+      "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[#$%&*]).+$"
+    );
+
+    if (!str || str.length === 0) {
+      return false;
+    }
+    if (pattern.test(str)) {
+      return true;
+    } 
+    return false;
+  }
+    
+  const handleSignUp = async () => {
+    try {
       //BACKEND find if these objects are available
-        const find_email = await axios.get(`${BASE_URL}/accounts?email=${email}`)
-        const find_phone_number = await axios.get(`${BASE_URL}/accounts?email=${email}`)
-
+      const find_email = await axios.get(`${BASE_URL}/accounts?email=${email}`);
+      const find_phone_number = await axios.get(`${BASE_URL}/accounts?phoneNumber=${phoneNumber}`);
 
       if (!email && !password) {
         showPopup('Please fill out all fields');
@@ -247,26 +196,21 @@ async function loginAccountsJSON(accountId) {
         showPopup('Please fill out your password');
       } else if (email.indexOf('@') < 0 || email.indexOf('.') < 0) {
         showPopup('Please fill out a valid email');
-      } else if (password.length < 8){
+      } else if (password.length < 8) {
         showPopup('Please fill out a Password that is at least 8 characters long');
-      } else if ( !(isAllPresent(password)) ){
-        showPopup('A Password should contain at least: both a lowercase and  an uppercase letters, a number and a special character(#$%&*) ');
-      }else if (password !== confirmPassword) {
+      } else if (!(isAllPresent(password))) {
+        showPopup('A Password should contain at least: both a lowercase and an uppercase letters, a number and a special character(#$%&*) ');
+      } else if (password !== confirmPassword) {
         showPopup('Passwords do not match');
       }
       //---Query for Email + Phone Number + Passwords---
-      else if( !!find_email.data ){
-        showPopup("Email is already taken ")
+      else if (find_email.data && find_email.data.length > 0) {
+        showPopup("Email is already taken ");
       }
-      else if( !!find_phone_number.data ){
-        showPopup("Phone number is already taken ")
-      }
-      else if( (!!!find_phone_number.data) ){
-        showPopup("Phone Number is already taken ")
+      else if (find_phone_number.data && find_phone_number.data.length > 0) {
+        showPopup("Phone number is already taken ");
       }
       else {
-        
-        
         const payload = {
           name: name,
           email: email,
@@ -275,38 +219,41 @@ async function loginAccountsJSON(accountId) {
           accessLevel: 0
         };
         
-        axios.post(`${BASE_URL}/accounts`, payload);
-        const find_account =  await axios.get(`${BASE_URL}/accounts?email=${email}&password=${password}`)
-        let user_id = find_account.data.items[0]._id;
+        await axios.post(`${BASE_URL}/accounts`, payload);
+        const find_account = await axios.get(`${BASE_URL}/accounts?email=${email}&password=${password}`);
         
-        //set accounts Json
-        
-        loginAccountsJSON(user_id);
-
-        showPopup(`Account created for: email: ${email} password: ${password},  name: ${name}, phoneNumber: ${phoneNumber}`);
+        if (find_account.data && find_account.data.length > 0) {
+          // Fixed to set user data and logged in state separately
+          setUser(find_account.data[0]); // Use the first account if there are multiple matches
+          setLoggedIn(true);
+          
+          showPopup(`Account created for: email: ${email} password: ${password}, name: ${name}, phoneNumber: ${phoneNumber}`);
+          navigation.replace('Profile');
+        } else {
+          showPopup("Account created but couldn't log in automatically. Please try logging in.");
         }
-        //send verification  email 
-        setLoggedIn = true;
-        
-    };
+      }
+    } catch (error) {
+      showPopup(`Sign up error: ${error.message}`);
+    }
+  };
 
-    const toggleModal = () => {
-      setModalVisible(!isModalVisible);
-    };
+  const toggleModal = () => {
+    setModalVisible(!isModalVisible);
+  };
 
-    return (
-      
-      <ParallaxScrollView
-        headerBackgroundColor={{ light: '#FFA726', dark: '#FF7043' }}
-        headerImage={
-          <Image
-            source={require('@/assets/images/Trans_TMC_Logo.png')}
-            style={styles.restaurantLogo}
-          />
-        }
-      >
+  return (
+    <ParallaxScrollView
+      headerBackgroundColor={{ light: '#FFA726', dark: '#FF7043' }}
+      headerImage={
+        <Image
+          source={require('@/assets/images/Trans_TMC_Logo.png')}
+          style={styles.restaurantLogo}
+        />
+      }
+    >
       <View style={styles.container}>
-      <ThemedText type="title">Sign Up</ThemedText>
+        <ThemedText type="title">Sign Up</ThemedText>
 
         <TextInput
           style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
@@ -314,7 +261,6 @@ async function loginAccountsJSON(accountId) {
           placeholderTextColor={colors.placeholderText}
           value={name}
           onChangeText={setName}
-          secureTextEntry
         />
         <TextInput
           style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
@@ -322,7 +268,6 @@ async function loginAccountsJSON(accountId) {
           placeholderTextColor={colors.placeholderText}
           value={phoneNumber}
           onChangeText={setNumber}
-          secureTextEntry
         />
         <TextInput
           style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
@@ -350,7 +295,6 @@ async function loginAccountsJSON(accountId) {
           secureTextEntry
         />
         
-
         <Button title="Sign Up" onPress={handleSignUp} color={colors.buttonColor} />
 
         {/* Back to Login Text */}
@@ -370,105 +314,96 @@ async function loginAccountsJSON(accountId) {
           </View>
         </Modal>
       </View>
-      </ParallaxScrollView>
-    );
+    </ParallaxScrollView>
+  );
+};
+
+// PROFILE SCREEN
+const ProfileScreen = () => {
+  const { user, logout } = useAuth();
+  const [name, setName] = useState(user?.name || '');
+  const [phoneNumber, setPhoneNumber] = useState(user?.phone || '');
+  
+  const colorScheme = useColorScheme();
+
+  const colors = {
+    background: colorScheme === 'dark' ? '#FF7043' : '#FFA726',
+    placeholderText: colorScheme === 'dark' ? '#BDBDBD' : '#000000',
+    inputBackground: colorScheme === 'dark' ? '#333' : '#FFF',
+    inputTextColor: colorScheme === 'dark' ? '#FFF' : '#000',
   };
 
-// Profile VVVVVVVVVVVV
-  const ProfileScreen = () => {
-    const [name, setName] = useState('');
-    const [phoneNumber, setPhoneNumber] = useState('');
-    const colorScheme = useColorScheme();
-
-
-    const colors = {
-      background: colorScheme === 'dark' ? '#FF7043' : '#FFA726',
-      placeholderText: colorScheme === 'dark' ? '#BDBDBD' : '#000000',
-      inputBackground: colorScheme === 'dark' ? '#333' : '#FFF',
-      inputTextColor: colorScheme === 'dark' ? '#FFF' : '#000',
-    };
-
-    async function getAccountData( name, phoneNumber){
-      const json_data = await readJSON(ACC_URL);
-      var id = json_data.id; 
-      const find_account =  await axios.get(`${BASE_URL}/accounts?_id=${id}`);
-      name = find_account.name;
-      phoneNumber = find_account.phoneNumber;
-    }
-
-    const handleSave = async () => {
+  const handleSave = async () => {
+    try {
       const payload = {
         name: name,
         phone: phoneNumber,
       };
-      axios.post(`${BASE_URL}/accounts?_id=${user_id}`, payload)
-      return;
+      await axios.post(`${BASE_URL}/accounts?_id=${user._id}`, payload);
+      // Update local state if needed
+    } catch (error) {
+      console.error('Failed to save changes', error);
     }
-    const handleLogout = async () => {
-      //empty Logout File
-      const acc_data = await readJSON(ACC_URL); 
-      acc_data.id = "test";
-      acc_data.token = "test";
-      //write changes
-      try{
-        await fs.writeFileSync( ACC_URL, JSON.stringify(acc_data, null, 2));
-        } catch (error) {
-          console.error("accounts.json was not updated: ", error);
-      }
-      return;
-    };
-  
-
-    return (
-      <ParallaxScrollView
-        headerBackgroundColor={{ light: '#FFA726', dark: '#FF7043' }}
-        headerImage={<Image source={require('@/assets/images/Trans_TMC_Logo.png')} style={styles.restaurantLogo} />}
-      >
-        <View style={styles.container}>
-          <ThemedText type="title">Profile</ThemedText>
-          <TextInput
-            style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
-            placeholder="Name"
-            placeholderTextColor={colors.placeholderText}
-            value={name}
-            onChangeText={setName}
-          />
-          <TextInput
-            style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
-            placeholder="Phone Number"
-            placeholderTextColor={colors.placeholderText}
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-          />
-          <Button title="Save Changes" onPress={handleSave} color={colors.background} />
-        </View>
-        <Button title="Logout" onPress={handleLogout} color={colors.background} />
-      </ParallaxScrollView>
-    );
   };
 
-// navigation for all pages made
-const AuthScreen = () => {
-  return (
+  if (!user) {
+    return <Text>Loading...</Text>;
+  }
 
-      <Stack.Navigator initialRouteName="Login">
-        {!loggedIn ? (
-          <>
-            <Stack.Screen name="Login">
-              {(props) => <LoginScreen {...props} setLoggedIn={setLoggedIn} />}
-            </Stack.Screen>
-            <Stack.Screen name="SignUp">
-              {(props) => <SignUpScreen {...props} setLoggedIn={setLoggedIn} />}
-            </Stack.Screen>
-          </>
-        ) : (
-          <Stack.Screen name="Profile" component={ProfileScreen} />
-        )}
-      </Stack.Navigator>
+  return (
+    <ParallaxScrollView
+      headerBackgroundColor={{ light: '#FFA726', dark: '#FF7043' }}
+      headerImage={<Image source={require('@/assets/images/Trans_TMC_Logo.png')} style={styles.restaurantLogo} />}
+    >
+      <View style={styles.container}>
+        <ThemedText type="title">Profile</ThemedText>
+        <TextInput
+          style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
+          placeholder="Name"
+          placeholderTextColor={colors.placeholderText}
+          value={name}
+          onChangeText={setName}
+        />
+        <TextInput
+          style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.inputTextColor }]}
+          placeholder="Phone Number"
+          placeholderTextColor={colors.placeholderText}
+          value={phoneNumber}
+          onChangeText={setPhoneNumber}
+        />
+        <Button title="Save Changes" onPress={handleSave} color={colors.background} />
+        <Button title="Logout" onPress={logout} color={colors.background} style={{ marginTop: 20 }} />
+      </View>
+    </ParallaxScrollView>
   );
 };
 
+// The Container that will manage Authentication State
+const NavigateLoggedIn = () => {
+  const { loggedIn } = useAuth();
 
+  return (
+    <Stack.Navigator>
+      {!loggedIn ? (
+        <>
+          <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="SignUp" component={SignUpScreen} options={{ headerShown: false }} />
+        </>
+      ) : (
+        <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
+      )}
+    </Stack.Navigator>
+  );
+};
+
+// Main component that provides the Auth context
+const AuthScreen = () => {
+  return (
+    <AuthProvider>
+      <NavigateLoggedIn />
+    </AuthProvider>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
