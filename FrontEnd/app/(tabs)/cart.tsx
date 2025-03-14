@@ -53,6 +53,15 @@ const PaymentButton = ({
 // Cart Screen Component
 function CartScreen() {
   const [menuItems, setMenuItems] = useState([]);
+      // Calculate cart total
+      const { cartItems, removeFromCart } = useCart();
+      const subtotal = cartItems.reduce((total, item) => {
+      const menuItem = menuItems.find(menu => menu._id === item.id);
+      return total + (menuItem?.price * item.quantity);
+    }, 0);
+    const tax = subtotal * 0.08875; // NYS 8.875% tax rate
+    const total = subtotal + tax;
+
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   const [isCartModalVisible, setCartModalVisible] = useState(false);
   const [isNewModalVisible, setIsNewModalVisible] = useState(false);
@@ -197,7 +206,6 @@ function CartScreen() {
   const Sidebar = ({ isVisible, onClose }) => 
   { 
     const navigation = useNavigation();
-    const { cartItems, removeFromCart } = useCart();
 
     const handlePayNow = () => {
       setCurrentView('payment');
@@ -207,93 +215,83 @@ function CartScreen() {
       setCurrentView('cart');
     };
 
-    // Calculate totals from cart data
-    const subtotal = cartItems.reduce((total, item) => {
-      const menuItem = menuItems.find(menu => menu._id === item.id);
-      return total + (menuItem?.price * item.quantity);
-    }, 0);
-    const tax = subtotal * 0.08875; // NYS 8.875% tax rate
-    const total = subtotal + tax;
-
     return (
-      <CartProvider>
-        <Modal transparent={true} animationType="slide" visible={isVisible}>
-          <View style={styles.overlay}>
-            <View style={styles.sidebarContainer}>
+      <Modal transparent={true} animationType="slide" visible={isVisible}>
+        <View style={styles.overlay}>
+          <View style={styles.sidebarContainer}>
 
-            {/* Sidebar text */}
-              <ThemedText style={styles.sidebarTitle}>Your Cart</ThemedText>
-              <ScrollView showsVerticalScrollIndicator={false}>
-                {cartItems.length > 0 ? (
-                  cartItems.map((item) => {
-                    const menuItem = menuItems.find(menu => menu._id === item.id);
-                    return(
-                    <View key={item.id} style={styles.cartItemContainer}>
-                      <View style={styles.cartItemDetails}>
-                        <ThemedText style={styles.item}>
-                          {item.quantity}x {item.name}
-                        </ThemedText>
-                        <ThemedText style={styles.cartItemPrice}>
-                          ${((menuItem?.price || 0) * item.quantity).toFixed(2)}
-                        </ThemedText>
-                      </View>
-                      <TouchableOpacity
-                            style={styles.removeButton}
-                            onPress={() => removeFromCart(item.id)}
-                      >
-                        <Icon name="trash" size={20} color="#FF0000" />
-                      </TouchableOpacity>
+          {/* Sidebar text */}
+            <ThemedText style={styles.sidebarTitle}>Your Cart</ThemedText>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {cartItems.length > 0 ? (
+                cartItems.map((item) => {
+                  const menuItem = menuItems.find(menu => menu._id === item.id);
+                  return(
+                  <View key={item.id} style={styles.cartItemContainer}>
+                    <View style={styles.cartItemDetails}>
+                      <ThemedText style={styles.item}>
+                        {item.quantity}x {item.name}
+                      </ThemedText>
+                      <ThemedText style={styles.cartItemPrice}>
+                        ${((menuItem?.price || 0) * item.quantity).toFixed(2)}
+                      </ThemedText>
                     </View>
-                  );
-                })
-                ) : (
-                  <ThemedText>No items in the cart.</ThemedText>
-                )}
+                    <TouchableOpacity
+                          style={styles.removeButton}
+                          onPress={() => removeFromCart(item.id)}
+                    >
+                      <Icon name="trash" size={20} color="#FF0000" />
+                    </TouchableOpacity>
+                  </View>
+                );
+              })
+              ) : (
+                <ThemedText>No items in the cart.</ThemedText>
+              )}
 
-                <View style={styles.divider} />
-                
-                {/* Sidebar calculations for the total */}
-                <View style={styles.totalsContainer}>
-                  <ThemedText>Subtotal: ${subtotal.toFixed(2)}</ThemedText>
-                  <ThemedText>Tax: ${tax.toFixed(2)}</ThemedText>
-                  <ThemedText style={styles.totalText}>
-                    Total: ${total.toFixed(2)}
-                  </ThemedText>
-                </View>
-                
-                <View style={styles.bottomPadding} />
-              </ScrollView>
+              <View style={styles.divider} />
+              
+              {/* Sidebar calculations for the total */}
+              <View style={styles.totalsContainer}>
+                <ThemedText>Subtotal: ${subtotal.toFixed(2)}</ThemedText>
+                <ThemedText>Tax: ${tax.toFixed(2)}</ThemedText>
+                <ThemedText style={styles.totalText}>
+                  Total: ${total.toFixed(2)}
+                </ThemedText>
+              </View>
+              
+              <View style={styles.bottomPadding} />
+            </ScrollView>
 
-              {/* Sidebar buttons */}
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <ThemedText style={styles.closeButtonText}>X</ThemedText>
+            {/* Sidebar buttons */}
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <ThemedText style={styles.closeButtonText}>X</ThemedText>
+            </TouchableOpacity>
+
+            <View style={styles.buttonWrapper}>
+              <TouchableOpacity 
+                  style={styles.backButton}
+                  onPress={() => {
+                    closeSidebar();
+                    backToCheckoutOptions();
+                  }}
+                >
+                  <Text style={styles.buttonText}>Back to Checkout Options</Text>
               </TouchableOpacity>
 
-              <View style={styles.buttonWrapper}>
-                <TouchableOpacity 
-                    style={styles.backButton}
-                    onPress={() => {
-                      closeSidebar();
-                      backToCheckoutOptions();
-                    }}
-                  >
-                    <Text style={styles.buttonText}>Back to Checkout Options</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity 
-                    style={styles.payButton}
-                    onPress={() => {
-                      closeSidebar();
-                      openPaymentModal();
-                    }}
-                  >
-                    <Text style={styles.buttonText}>Pay Now</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity 
+                  style={styles.payButton}
+                  onPress={() => {
+                    closeSidebar();
+                    openPaymentModal();
+                  }}
+                >
+                  <Text style={styles.buttonText}>Pay Now</Text>
+              </TouchableOpacity>
             </View>
           </View>
-        </Modal>
-      </CartProvider>
+        </View>
+      </Modal>
     );
   };
 
@@ -307,212 +305,201 @@ function CartScreen() {
     setSelectedPaymentMethod('');
   };
 
-// // Used to display total at payment
-//   const { cartItems } = useCart();
-//   const subtotal = cartItems.reduce((total, item) => {
-//     const menuItem = menuItems.find(menu => menu._id === item.id);
-//     return total + ((menuItem?.price || 0) * item.quantity);
-//   }, 0);
-//   const tax = subtotal * 0.08875;
-//   const total = subtotal + tax;
-
   return (
-    <CartProvider>
-      <ThemedView style={{ flex: 1 }}>
-        <Sidebar 
-        isVisible={isSidebarVisible} 
-        onClose={closeSidebar} 
-        />
-        <ParallaxScrollView
-          headerBackgroundColor={{ light: '#FFA726', dark: '#FF7043' }}
-          headerImage={
-            <Image
-              source={require('@/assets/images/Trans_TMC_Logo.png')}
-              style={styles.restaurantLogo}
-            />
-          }>
-          <ThemedView style={styles.titleContainer}>
-            <ThemedText type="title">Payment Options</ThemedText>
-          </ThemedView>
-          <ThemedView style={styles.stepContainer}>
-            <ThemedText type="subtitle">1. Apple Pay</ThemedText>
-            <Image
-              source={require('@/assets/images/applepaylogo.png')}
-              style={styles.invertedapplePayLogo}
-            />
-            <ThemedText type="subtitle">2. Google Pay</ThemedText>
-            <Image
-              source={require('@/assets/images/googlepaylogo.svg.png')}
-              style={styles.googlePayLogo}
-            />
-            <ThemedText type="subtitle">3. Venmo</ThemedText>
-            <Image
-              source={require('@/assets/images/Venmo_logo.png')}
-              style={styles.venmoLogo}
-            />
-            <ThemedText type="subtitle">4. Credit Card/Debit Card</ThemedText>
-            <Image
-              source={require('@/assets/images/6963703.png')}
-              style={styles.creditCardLogo} 
-            />
-          </ThemedView>
-        </ParallaxScrollView>
+    <ThemedView style={{ flex: 1 }}>
+      <Sidebar 
+      isVisible={isSidebarVisible} 
+      onClose={closeSidebar} 
+      />
+      <ParallaxScrollView
+        headerBackgroundColor={{ light: '#FFA726', dark: '#FF7043' }}
+        headerImage={
+          <Image
+            source={require('@/assets/images/Trans_TMC_Logo.png')}
+            style={styles.restaurantLogo}
+          />
+        }>
+        <ThemedView style={styles.titleContainer}>
+          <ThemedText type="title">Payment Options</ThemedText>
+        </ThemedView>
+        <ThemedView style={styles.stepContainer}>
+          <ThemedText type="subtitle">1. Apple Pay</ThemedText>
+          <Image
+            source={require('@/assets/images/applepaylogo.png')}
+            style={styles.invertedapplePayLogo}
+          />
+          <ThemedText type="subtitle">2. Google Pay</ThemedText>
+          <Image
+            source={require('@/assets/images/googlepaylogo.svg.png')}
+            style={styles.googlePayLogo}
+          />
+          <ThemedText type="subtitle">3. Venmo</ThemedText>
+          <Image
+            source={require('@/assets/images/Venmo_logo.png')}
+            style={styles.venmoLogo}
+          />
+          <ThemedText type="subtitle">4. Credit Card/Debit Card</ThemedText>
+          <Image
+            source={require('@/assets/images/6963703.png')}
+            style={styles.creditCardLogo} 
+          />
+        </ThemedView>
+      </ParallaxScrollView>
 
-        {/* Modal for options when checking out */}
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={isCartModalVisible}
-          onRequestClose={closeModalAndNavigate}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalText}>Checkout Options</Text>
-              
-              <TouchableOpacity 
-                onPress={closeModalAndNavigate}
-                style={[styles.touchableButton, { backgroundColor: 'red' }]}
-              >
-                <Text style={styles.buttonText}>Add Items to Cart</Text>
-              </TouchableOpacity>
+      {/* Modal for options when checking out */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isCartModalVisible}
+        onRequestClose={closeModalAndNavigate}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>Checkout Options</Text>
+            
+            <TouchableOpacity 
+              onPress={closeModalAndNavigate}
+              style={[styles.touchableButton, { backgroundColor: 'red' }]}
+            >
+              <Text style={styles.buttonText}>Add Items to Cart</Text>
+            </TouchableOpacity>
 
-              <TouchableOpacity 
+            <TouchableOpacity 
+              onPress={() => {
+                closeModal();
+                openSidebar();
+              }}
+              style={[styles.touchableButton, { backgroundColor: 'blue' }]}
+            >
+              <Text style={styles.buttonText}>Complete Order</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              onPress={closeModal}
+              style={[styles.touchableButton, { backgroundColor: 'gray' }]}
+            >
+              <Text style={styles.buttonText}>View Payment Options</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Payment Method Selection Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isPaymentMethodModalVisible}
+        onRequestClose={closePaymentMethodModal}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>Select Payment Method</Text>
+            
+            <View style={styles.paymentButtonsContainer}>
+              <PaymentButton
                 onPress={() => {
-                  closeModal();
-                  openSidebar();
+                  setSelectedPaymentMethod('Apple Pay');
+                  console.log('Apple Pay selected');
                 }}
-                style={[styles.touchableButton, { backgroundColor: 'blue' }]}
-              >
-                <Text style={styles.buttonText}>Complete Order</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                onPress={closeModal}
-                style={[styles.touchableButton, { backgroundColor: 'gray' }]}
-              >
-                <Text style={styles.buttonText}>View Payment Options</Text>
-              </TouchableOpacity>
+                logo={require('@/assets/images/applepaylogo.png')}
+                style={styles.applePayButton}
+                testID="apple-pay-button"
+              />
+              <PaymentButton
+                onPress={() => {
+                  setSelectedPaymentMethod('Google Pay');
+                  console.log('Google Pay selected');
+                }}
+                logo={require('@/assets/images/googlepaylogo.svg.png')}
+                style={styles.googlePayButton}
+                testID="google-pay-button"
+              />
+              <PaymentButton
+                onPress={() => {
+                  setSelectedPaymentMethod('Venmo');
+                  console.log('Venmo selected');
+                }}
+                logo={require('@/assets/images/Venmo_logo.png')}
+                style={styles.venmoButton}
+                testID="venmo-button"
+              />
+              <PaymentButton
+                onPress={() => {
+                  setSelectedPaymentMethod('Credit Card');
+                  console.log('Credit Card selected');
+                }}
+                logo={require('@/assets/images/6963703.png')}
+                style={styles.creditCardButton}
+                testID="credit-card-button"
+              />
             </View>
+            
+            <Text style={styles.totalTextCheckout}>Total: ${total.toFixed(2)}</Text>
+            
+            <TouchableOpacity 
+              style={[styles.touchableButton, styles.backButton1]} 
+              onPress={backtoOrderTotal}
+            >
+              <Text style={styles.buttonText1}>Back to Order Total</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.touchableButton, 
+                styles.payButton1,
+                !selectedPaymentMethod && { opacity: 0.5 }
+              ]}
+              onPress={handlePayment}
+              disabled={!selectedPaymentMethod}
+            >
+              <Text style={styles.buttonText1}>Complete Payment</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.touchableButton, styles.payButton1, { backgroundColor: '#FF3B30' }]} 
+              onPress={closePaymentMethodModal}
+            >
+              <Text style={styles.buttonText1}>Cancel</Text>
+            </TouchableOpacity>
           </View>
-        </Modal>
+        </View>
+      </Modal>
 
-        {/* Payment Method Selection Modal */}
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={isPaymentMethodModalVisible}
-          onRequestClose={closePaymentMethodModal}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalText}>Select Payment Method</Text>
-              
-              <View style={styles.paymentButtonsContainer}>
-                <PaymentButton
-                  onPress={() => {
-                    setSelectedPaymentMethod('Apple Pay');
-                    console.log('Apple Pay selected');
-                  }}
-                  logo={require('@/assets/images/applepaylogo.png')}
-                  style={styles.applePayButton}
-                  testID="apple-pay-button"
-                />
-                <PaymentButton
-                  onPress={() => {
-                    setSelectedPaymentMethod('Google Pay');
-                    console.log('Google Pay selected');
-                  }}
-                  logo={require('@/assets/images/googlepaylogo.svg.png')}
-                  style={styles.googlePayButton}
-                  testID="google-pay-button"
-                />
-                <PaymentButton
-                  onPress={() => {
-                    setSelectedPaymentMethod('Venmo');
-                    console.log('Venmo selected');
-                  }}
-                  logo={require('@/assets/images/Venmo_logo.png')}
-                  style={styles.venmoButton}
-                  testID="venmo-button"
-                />
-                <PaymentButton
-                  onPress={() => {
-                    setSelectedPaymentMethod('Credit Card');
-                    console.log('Credit Card selected');
-                  }}
-                  logo={require('@/assets/images/6963703.png')}
-                  style={styles.creditCardButton}
-                  testID="credit-card-button"
-                />
-              </View>
-              
-              <Text style={styles.totalText}>Total: $6.52</Text>
-              
-              <TouchableOpacity 
-                style={[styles.touchableButton, styles.backButton1]} 
-                onPress={backtoOrderTotal}
-              >
-                <Text style={styles.buttonText1}>Back to Order Total</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[
-                  styles.touchableButton, 
-                  styles.payButton1,
-                  !selectedPaymentMethod && { opacity: 0.5 }
-                ]}
-                onPress={handlePayment}
-                disabled={!selectedPaymentMethod}
-              >
-                <Text style={styles.buttonText1}>Complete Payment</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.touchableButton, styles.payButton1, { backgroundColor: '#FF3B30' }]} 
-                onPress={closePaymentMethodModal}
-              >
-                <Text style={styles.buttonText1}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
+      {/* Payment Confirmation Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isPaymentConfirmationModalVisible}
+        onRequestClose={handleDone}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>Payment Confirmation</Text>
+            <Text style={styles.modalSubtitle}>Order #12345</Text>
+            <Text style={styles.modalSubtitle}>Total Paid: {total.toFixed(2)}</Text>
+            <Text style={styles.modalSubtitle}>Payment Method: {selectedPaymentMethod}</Text>
+            <Text style={styles.modalSubtitle}>Date: {new Date().toLocaleDateString()}</Text>
+            <Text style={styles.modalSubtitle}> </Text>
+            
+            <Image source={require('@/assets/images/TMC_Logo.png')} style={styles.tmcLogo} />
+            <Text style={[styles.modalSubtitle, styles.successMessage]}>
+              Payment Successful! Thank you for your order.
+            </Text>
+            <Text style={styles.modalSubtitle}>
+              Your order will be ready for pickup in approximately 15-20 minutes.
+            </Text>
+            
+            <TouchableOpacity 
+              onPress={handleDone}
+              style={styles.doneButton}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.doneButtonText}>Done</Text>
+            </TouchableOpacity>
           </View>
-        </Modal>
-
-        {/* Payment Confirmation Modal */}
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={isPaymentConfirmationModalVisible}
-          onRequestClose={handleDone}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalText}>Payment Confirmation</Text>
-              <Text style={styles.modalSubtitle}>Order #12345</Text>
-              <Text style={styles.modalSubtitle}>Total Paid: $6.52</Text>
-              <Text style={styles.modalSubtitle}>Payment Method: {selectedPaymentMethod}</Text>
-              <Text style={styles.modalSubtitle}>Date: {new Date().toLocaleDateString()}</Text>
-              <Text style={styles.modalSubtitle}> </Text>
-              
-              <Image source={require('@/assets/images/TMC_Logo.png')} style={styles.tmcLogo} />
-              <Text style={[styles.modalSubtitle, styles.successMessage]}>
-                Payment Successful! Thank you for your order.
-              </Text>
-              <Text style={styles.modalSubtitle}>
-                Your order will be ready for pickup in approximately 15-20 minutes.
-              </Text>
-              
-              <TouchableOpacity 
-                onPress={handleDone}
-                style={styles.doneButton}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.doneButtonText}>Done</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-      </ThemedView>
-    </CartProvider>
+        </View>
+      </Modal>
+    </ThemedView>
   );
 }
 
@@ -836,8 +823,11 @@ const styles = StyleSheet.create({
     color: '#e5dccf',
   },
   // Formatting of the total text in the sidebar
-  totalText: {
+  totalTextCheckout: {
+    color: '#fff',
+    fontSize: 18,
     fontWeight: 'bold',
+    padding: 5,
   },
   // Container for all the items in sidebar
   cartItemContainer: {

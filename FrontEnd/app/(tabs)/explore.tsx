@@ -117,68 +117,66 @@ export default function MenuScreen() {
     const total = subtotal + tax;
 
     return (
-      <CartProvider>
-        <Modal transparent={true} animationType="slide" visible={isVisible}>
-          <View style={styles.overlay}>
-            <View style={styles.sidebarContainer}>
+      <Modal transparent={true} animationType="slide" visible={isVisible}>
+        <View style={styles.overlay}>
+          <View style={styles.sidebarContainer}>
 
-            {/* Sidebar text */}
-              <ThemedText style={styles.sidebarTitle}>Your Cart</ThemedText>
-              <ScrollView showsVerticalScrollIndicator={false}>
-                {cartItems.length > 0 ? (
-                  cartItems.map((item) => {
-                    const menuItem = menuItems.find(menu => menu._id === item.id);
-                    return(
-                    <View key={item.id} style={styles.cartItemContainer}>
-                      <View style={styles.cartItemDetails}>
-                        <ThemedText style={styles.item}>
-                          {item.quantity}x {item.name}
-                        </ThemedText>
-                        <ThemedText style={styles.cartItemPrice}>
-                          ${((menuItem?.price || 0) * item.quantity).toFixed(2)}
-                        </ThemedText>
-                      </View>
-                      <TouchableOpacity
-                            style={styles.removeButton}
-                            onPress={() => removeFromCart(item.id)}
-                      >
-                        <Icon name="trash" size={20} color="#FF0000" />
-                      </TouchableOpacity>
+          {/* Sidebar text */}
+            <ThemedText style={styles.sidebarTitle}>Your Cart</ThemedText>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {cartItems.length > 0 ? (
+                cartItems.map((item) => {
+                  const menuItem = menuItems.find(menu => menu._id === item.id);
+                  return(
+                  <View key={item.id} style={styles.cartItemContainer}>
+                    <View style={styles.cartItemDetails}>
+                      <ThemedText style={styles.item}>
+                        {item.quantity}x {item.name}
+                      </ThemedText>
+                      <ThemedText style={styles.cartItemPrice}>
+                        ${((menuItem?.price || 0) * item.quantity).toFixed(2)}
+                      </ThemedText>
                     </View>
-                  );
-                })
-                ) : (
-                  <ThemedText>No items in the cart.</ThemedText>
-                )}
-
-                <View style={styles.divider} />
-                
-                {/* Sidebar calculations for the total */}
-                <View style={styles.totalsContainer}>
-                  <ThemedText>Subtotal: ${subtotal.toFixed(2)}</ThemedText>
-                  <ThemedText>Tax: ${tax.toFixed(2)}</ThemedText>
-                  <ThemedText style={styles.totalText}>
-                    Total: ${total.toFixed(2)}
-                  </ThemedText>
-                </View>
-                
-                <View style={styles.bottomPadding} />
-              </ScrollView>
-
-              {/* Sidebar buttons */}
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <ThemedText style={styles.closeButtonText}>X</ThemedText>
-              </TouchableOpacity>
-
-              {cartItems.length > 0 && (
-                <TouchableOpacity onPress={closeAndNavigate} style={styles.navigateButton}>
-                  <ThemedText style={styles.navigateText}>Checkout</ThemedText>
-                </TouchableOpacity>
+                    <TouchableOpacity
+                          style={styles.removeButton}
+                          onPress={() => removeFromCart(item.id)}
+                    >
+                      <Icon name="trash" size={20} color="#FF0000" />
+                    </TouchableOpacity>
+                  </View>
+                );
+              })
+              ) : (
+                <ThemedText>No items in the cart.</ThemedText>
               )}
-            </View>
+
+              <View style={styles.divider} />
+              
+              {/* Sidebar calculations for the total */}
+              <View style={styles.totalsContainer}>
+                <ThemedText>Subtotal: ${subtotal.toFixed(2)}</ThemedText>
+                <ThemedText>Tax: ${tax.toFixed(2)}</ThemedText>
+                <ThemedText style={styles.totalText}>
+                  Total: ${total.toFixed(2)}
+                </ThemedText>
+              </View>
+              
+              <View style={styles.bottomPadding} />
+            </ScrollView>
+
+            {/* Sidebar buttons */}
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <ThemedText style={styles.closeButtonText}>X</ThemedText>
+            </TouchableOpacity>
+
+            {cartItems.length > 0 && (
+              <TouchableOpacity onPress={closeAndNavigate} style={styles.navigateButton}>
+                <ThemedText style={styles.navigateText}>Checkout</ThemedText>
+              </TouchableOpacity>
+            )}
           </View>
-        </Modal>
-      </CartProvider>
+        </View>
+      </Modal>
     );
   };
   
@@ -190,95 +188,93 @@ export default function MenuScreen() {
   // Format frontend
   return (
     // Sidebar status
-    <CartProvider>
-      <View style={styles.container}>
-        {isSidebarVisible && (
-          <Sidebar 
-            onClose={() => setIsSidebarVisible(false)}
-            isVisible={isSidebarVisible}
-          />
-        )}
+    <View style={styles.container}>
+      {isSidebarVisible && (
+        <Sidebar 
+          onClose={() => setIsSidebarVisible(false)}
+          isVisible={isSidebarVisible}
+        />
+      )}
 
-        {/* Menu Section */}
-        <View style={[styles.contentContainer, { marginRight: isSidebarVisible }]}>
-          <ParallaxScrollView
-            showsVerticalScrollIndicator={true}
-            showsHorizontalScrollIndicator={false}
-            headerBackgroundColor={{ light: '#FFA726', dark: '#FF7043' }}
-            headerImage={
-              <Image
-                source={require('@/assets/images/Trans_TMC_Logo.png')}
-                style={styles.restaurantLogo}
+      {/* Menu Section */}
+      <View style={[styles.contentContainer, { marginRight: isSidebarVisible }]}>
+        <ParallaxScrollView
+          showsVerticalScrollIndicator={true}
+          showsHorizontalScrollIndicator={false}
+          headerBackgroundColor={{ light: '#FFA726', dark: '#FF7043' }}
+          headerImage={
+            <Image
+              source={require('@/assets/images/Trans_TMC_Logo.png')}
+              style={styles.restaurantLogo}
+            />
+          }>
+          
+          <ThemedView style={styles.titleContainer}>
+            <ThemedText type="title">Today's Menu</ThemedText>
+          </ThemedView>
+
+          <Divider />
+
+          {/* Appetizers Section */}
+          <ThemedView style={styles.sectionContainer}>
+            <ThemedText style={styles.subtitle} type="subtitle">Appetizers</ThemedText>
+            {categorizedItems.appetizers.map((item) => (
+              <MenuItem
+                key={item._id}
+                itemId={item._id}
+                itemName={item.name}
+                itemDescription={item.description}
+                itemPrice={item.price}
+                itemAllergen={item.allergen}
               />
-            }>
-            
-            <ThemedView style={styles.titleContainer}>
-              <ThemedText type="title">Today's Menu</ThemedText>
-            </ThemedView>
+            ))}
+          </ThemedView>
 
-            <Divider />
+          <Divider />
 
-            {/* Appetizers Section */}
-            <ThemedView style={styles.sectionContainer}>
-              <ThemedText style={styles.subtitle} type="subtitle">Appetizers</ThemedText>
-              {categorizedItems.appetizers.map((item) => (
-                <MenuItem
-                  key={item._id}
-                  itemId={item._id}
-                  itemName={item.name}
-                  itemDescription={item.description}
-                  itemPrice={item.price}
-                  itemAllergen={item.allergen}
-                />
-              ))}
-            </ThemedView>
+          {/* Main Dishes Section */}
+          <ThemedView style={styles.sectionContainer}>
+            <ThemedText style={styles.subtitle} type="subtitle">Main Dishes</ThemedText>
+            {categorizedItems.mainDishes.map((item) => (
+              <MenuItem
+                key={item._id}
+                itemId={item._id}
+                itemName={item.name}
+                itemDescription={item.description}
+                itemPrice={item.price}
+                itemAllergen={item.allergen}
+              />
+            ))}
+          </ThemedView>
 
-            <Divider />
+          <Divider />
 
-            {/* Main Dishes Section */}
-            <ThemedView style={styles.sectionContainer}>
-              <ThemedText style={styles.subtitle} type="subtitle">Main Dishes</ThemedText>
-              {categorizedItems.mainDishes.map((item) => (
-                <MenuItem
-                  key={item._id}
-                  itemId={item._id}
-                  itemName={item.name}
-                  itemDescription={item.description}
-                  itemPrice={item.price}
-                  itemAllergen={item.allergen}
-                />
-              ))}
-            </ThemedView>
+          {/* Desserts Section */}
+          <ThemedView style={styles.sectionContainer}>
+            <ThemedText style={styles.subtitle} type="subtitle">Desserts</ThemedText>
+            {categorizedItems.desserts.map((item) => (
+              <MenuItem
+                key={item._id}
+                itemId={item._id}
+                itemName={item.name}
+                itemDescription={item.description}
+                itemPrice={item.price}
+                itemAllergen={item.allergen}
+              />
+            ))}
+          </ThemedView>
+        </ParallaxScrollView>
 
-            <Divider />
-
-            {/* Desserts Section */}
-            <ThemedView style={styles.sectionContainer}>
-              <ThemedText style={styles.subtitle} type="subtitle">Desserts</ThemedText>
-              {categorizedItems.desserts.map((item) => (
-                <MenuItem
-                  key={item._id}
-                  itemId={item._id}
-                  itemName={item.name}
-                  itemDescription={item.description}
-                  itemPrice={item.price}
-                  itemAllergen={item.allergen}
-                />
-              ))}
-            </ThemedView>
-          </ParallaxScrollView>
-
-          {/* View Cart button and Sidebar access */}
-          <View style={styles.fixedButtonContainer}>
-            <TouchableOpacity style={styles.viewCartButton} onPress={() => setIsSidebarVisible(true)}>
-              <View style={styles.iconContainer}>
-                <Icon name="shopping-cart" size={36} color="#FFF" style={styles.cartIcon}/>
-              </View>
-            </TouchableOpacity>
-          </View>
+        {/* View Cart button and Sidebar access */}
+        <View style={styles.fixedButtonContainer}>
+          <TouchableOpacity style={styles.viewCartButton} onPress={() => setIsSidebarVisible(true)}>
+            <View style={styles.iconContainer}>
+              <Icon name="shopping-cart" size={36} color="#FFF" style={styles.cartIcon}/>
+            </View>
+          </TouchableOpacity>
         </View>
       </View>
-    </CartProvider>
+    </View>
   );
 }
 
