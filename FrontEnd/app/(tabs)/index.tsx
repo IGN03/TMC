@@ -21,6 +21,7 @@ export default function HomeScreen() {
         <Image
           source={require('@/assets/images/Trans_TMC_Logo.png')}
           style={styles.restaurantLogo}
+          testID="tmc-image"
         />
       }>
       <ThemedView style={styles.titleContainer}>

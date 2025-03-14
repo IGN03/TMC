@@ -38,6 +38,15 @@ describe('HomeScreen', () => {
     
     linkElement = screen.getByText("Now at the Troy Waterfront Farmers Market and in front of the RPI Student Union - follow us to find out when!");
     expect(linkElement).toBeOnTheScreen();
+     
+    let image = screen.getByTestId("tmc-image");
+    expect(image).toBeOnTheScreen();
+    
+    image = screen.getByTestId("insta-image");
+    expect(image).toBeOnTheScreen();
+    
+    image = screen.getByTestId("facebook-image");
+    expect(image).toBeOnTheScreen();
     
   });
 });
