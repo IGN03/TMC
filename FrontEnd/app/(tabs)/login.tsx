@@ -6,7 +6,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import axios from 'axios';
-import { AuthProvider, useAuth } from '../AuthContext'; // Fixed import
+import { AuthProvider, useAuth } from '../components/AuthContext'; // Fixed import
 
 // Global stuff
 const Stack = createStackNavigator();
@@ -397,11 +397,9 @@ const NavigateLoggedIn = () => {
 };
 
 // Main component that provides the Auth context
-const AuthScreen = () => {
+export default function AuthScreen(){
   return (
-    <AuthProvider>
       <NavigateLoggedIn />
-    </AuthProvider>
   );
 };
 
@@ -470,4 +468,3 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AuthScreen;
