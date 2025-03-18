@@ -6,9 +6,10 @@ import HomeScreen from '@/app/(tabs)/index';
 const Tab = createBottomTabNavigator();
 
 describe('HomeScreen', () => {
-  it('should render HomeScreen', () => {
+
+  test('should render HomeScreen text', () => {
     // Render the HomeScreen component wrapped in the navigator
-    const { getByPlaceholderText, getByText, getByTestId } = render(<HomeScreen />);
+    const {getByText} = render(<HomeScreen />);
     
     expect(getByText("Welcome to Thunder Mountain Curry!")).toBeTruthy();
     
@@ -24,6 +25,13 @@ describe('HomeScreen', () => {
     
     expect(getByText("Now at the Troy Waterfront Farmers Market and in front of the RPI Student Union - follow us to find out when!")).toBeTruthy();
      
+  });
+
+
+  test('should render HomeScreen images', () => {
+    // Render the HomeScreen component wrapped in the navigator
+    const {getByTestId } = render(<HomeScreen />);
+    
     expect(getByTestId("tmc-image")).toBeTruthy();
     
     expect(getByTestId("insta-image")).toBeTruthy();
@@ -31,4 +39,6 @@ describe('HomeScreen', () => {
     expect(getByTestId("facebook-image")).toBeTruthy();
     
   });
+
+
 });
