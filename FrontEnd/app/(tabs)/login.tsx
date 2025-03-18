@@ -396,6 +396,7 @@ const NavigateLoggedIn = () => {
   );
 };
 
+
 // Main component that provides the Auth context
 export default function AuthScreen(){
   return (
