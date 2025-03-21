@@ -3,13 +3,15 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '@/app/(tabs)/index';
 
-const Tab = createBottomTabNavigator();
 
 describe('HomeScreen', () => {
 
   test('should render HomeScreen text', () => {
     // Render the HomeScreen component wrapped in the navigator
-    const {getByText} = render(<HomeScreen />);
+    const {getByText} = render(
+      <NavigationContainer>
+      <HomeScreen />
+      </NavigationContainer>);
     
     expect(getByText("Welcome to Thunder Mountain Curry!")).toBeTruthy();
     
@@ -30,7 +32,10 @@ describe('HomeScreen', () => {
 
   test('should render HomeScreen images', () => {
     // Render the HomeScreen component wrapped in the navigator
-    const {getByTestId } = render(<HomeScreen />);
+    const {getByTestId } = render(
+      <NavigationContainer>
+      <HomeScreen />
+      </NavigationContainer>);
     
     expect(getByTestId("tmc-image")).toBeTruthy();
     
