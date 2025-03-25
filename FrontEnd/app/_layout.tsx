@@ -8,6 +8,7 @@ import { CartProvider } from './components/CartContext';
 import { useCart } from './components/CartContext';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { AuthProvider } from './components/AuthContext';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -29,12 +30,14 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>\
       <CartProvider>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
+        <AuthProvider>      
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+        </AuthProvider>
       </CartProvider>
     </ThemeProvider>
   );
