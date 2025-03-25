@@ -8,7 +8,6 @@ import { CartProvider } from './components/CartContext';
 import { useCart } from './components/CartContext';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { CartProvider } from './components/CartContext';
 import { AuthProvider } from './components/AuthContext';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
