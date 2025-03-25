@@ -64,9 +64,7 @@ export default function MenuScreen() {
     const loadMenuItems = async () => {
       try 
       {
-        console.log('Fetching from:', `${BACKEND_URL}/menuItems`);
         const response = await axios.get(`${BACKEND_URL}/menuItems`);
-        console.log('Response data:', response.data);
         const items = Array.isArray(response.data.foundItems) ? response.data.foundItems : [];
         setMenuItems(items);
         
@@ -77,7 +75,6 @@ export default function MenuScreen() {
           mainDishes: items.filter(item => item.category === 'Main'),
           desserts: items.filter(item => item.category === 'Dessert')
         };
-        console.log('Categorized items:', categorized);
         setCategorizedItems(categorized);
       } 
       
