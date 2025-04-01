@@ -9,7 +9,7 @@ describe('AdminPage', () => {
 
   test('should render AdminPage text', () => {
     // Render the HomeScreen component wrapped in the navigator
-    const {getByText} = render(
+    const {getByText, queryByText} = render(
       <NavigationContainer>
       <AdminPage />
       </NavigationContainer>);
@@ -27,6 +27,19 @@ describe('AdminPage', () => {
     fireEvent.press(button)
     
     expect(getByText("New/Edit Item")).toBeTruthy();
+
+    // reset to the main page by pressing the back buttons
+    button = getByText("Cancel")
+
+    fireEvent.press(button)
+
+    expect(queryByText("New/Edit Item")).toBeNull();
+
+    button = getByText("Close")
+
+    fireEvent.press(button)
+
+    expect(queryByText("Menu Changes")).toBeNull();
      
   });
 
