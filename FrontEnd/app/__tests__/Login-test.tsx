@@ -1,28 +1,35 @@
 import React from 'react';
-import { render, fireEvent, waitFor, screen } from '@testing-library/react-native';
+import { render } from '@testing-library/react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import LoginScreen from '@/app/(tabs)/login';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import { AuthProvider, useAuth } from '../components/AuthContext';
+import { AuthProvider } from '../components/AuthContext';
 
-jest.mock('expo-font', () => ({
-  loadAsync: jest.fn(() => Promise.resolve()),
-  isLoaded: jest.fn(() => true),
-}));
+// Mock react-native-gesture-handler
+jest.mock('react-native-gesture-handler', () => {
+  const ActualGestureHandler = jest.requireActual('react-native-gesture-handler');
+  return {
+    ...ActualGestureHandler,
+    GestureHandlerRootView: ({ children }) => <>{children}</>,
+    PanGestureHandler: ({ children }) => <>{children}</>,
+    TouchableOpacity: ({ children }) => <>{children}</>,
+  };
+});
 
-describe('LoginScreen', () => {
+describe('LoginScreen Component', () => {
+  it('renders correctly', () => {
+    const { getByPlaceholderText, getByTestId } = render(
+      <AuthProvider>
+        <GestureHandlerRootView> {/* Wrap test in GestureHandlerRootView */}
+          <NavigationContainer>
+            <LoginScreen />
+          </NavigationContainer>
+        </GestureHandlerRootView>
+      </AuthProvider>
+    );
 
-  test('should render LoginScreen text', () => {
-    // Render the HomeScreen component wrapped in the navigator
-    const {getByText} = render(
-      <NavigationContainer>
-      <LoginScreen />
-      </NavigationContainer>);
-    
-    expect(getByText("Login")).toBeTruthy();
-     
+    expect(getByPlaceholderText('Email')).toBeTruthy();
+    expect(getByPlaceholderText('Password')).toBeTruthy();
+    expect(getByTestId('LoginButton')).toBeTruthy();
   });
-
 });

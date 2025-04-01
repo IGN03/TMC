@@ -114,7 +114,7 @@ const LoginScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <Button title="Login" onPress={handleLogin} color={colors.buttonColor} />
+      <Button title="Login" onPress={handleLogin} color={colors.buttonColor} testID="LoginButton"/>
 
       {/* Sign Up Text */}
       <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
