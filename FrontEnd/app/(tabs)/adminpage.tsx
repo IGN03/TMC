@@ -22,7 +22,7 @@ interface MenuItemFormData {
   description: string;
 }
 
-const AdminPage = () => {
+export default function AdminPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [newMenuItem, setNewMenuItem] = useState<MenuItemFormData>({ 
     name: '', 
@@ -312,5 +312,3 @@ const styles = StyleSheet.create({
     marginBottom: 20, 
   },
 });
-
-export default AdminPage;
