@@ -22,7 +22,7 @@ interface MenuItemFormData {
   description: string;
 }
 
-const AdminPage = () => {
+export default function AdminPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [newMenuItem, setNewMenuItem] = useState<MenuItemFormData>({ 
     name: '', 
@@ -56,22 +56,22 @@ const AdminPage = () => {
     // const { name, price, allergen, description } = newMenuItem;
 
     // // Validation checks
-    // if (!name) {
-    //   Alert.alert('Validation Error', 'Please enter a name.');
-    //   return;
-    // }
-    // if (!price || isNaN(price) || price <= 0) {
-    //   Alert.alert('Validation Error', 'Please enter a valid price greater than 0.');
-    //   return;
-    // }
-    // if (!allergen) {
-    //   Alert.alert('Validation Error', 'Please enter an allergen.');
-    //   return;
-    // }
-    // if (!description) {
-    //   Alert.alert('Validation Error', 'Please enter a description.');
-    //   return;
-    // }
+    if (!newMenuItem.name) {
+      Alert.alert('Validation Error', 'Please enter a name.');
+      return;
+    }
+    if (!newMenuItem.price || isNaN(newMenuItem.price) || newMenuItem.price <= 0) {
+      Alert.alert('Validation Error', 'Please enter a valid price greater than 0.');
+      return;
+    }
+    if (!newMenuItem.allergen) {
+      Alert.alert('Validation Error', 'Please enter an allergen.');
+      return;
+    }
+     if (!newMenuItem.description) {
+      Alert.alert('Validation Error', 'Please enter a description.');
+      return;
+    }
 
     const method = editMode ? 'PUT' : 'POST';
     const url = editMode 
@@ -312,5 +312,3 @@ const styles = StyleSheet.create({
     marginBottom: 20, 
   },
 });
-
-export default AdminPage;
