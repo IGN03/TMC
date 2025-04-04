@@ -82,5 +82,32 @@ describe('LoginScreen Component', () => {
     expect(getByText('Please fill out a valid email')).toBeTruthy();
     fireEvent.press(closeButton)
   });
-  
+
+
+  it('renders signup page correctly', () => {
+    const { getByPlaceholderText, getByTestId, getByText } = render(
+      <AuthProvider>
+        <GestureHandlerRootView> {/* Wrap test in GestureHandlerRootView */}
+          <NavigationContainer>
+            <LoginScreen />
+          </NavigationContainer>
+        </GestureHandlerRootView>
+      </AuthProvider>
+    );
+
+    expect(getByText("Don't have an account? Sign up")).toBeTruthy();
+    fireEvent.press(getByText("Don't have an account? Sign up"))
+
+    expect(getByPlaceholderText('Name')).toBeTruthy();
+    expect(getByPlaceholderText('Phone Number')).toBeTruthy();
+    expect(getByPlaceholderText('Email')).toBeTruthy();
+    expect(getByPlaceholderText('Password')).toBeTruthy();
+    expect(getByPlaceholderText('Confirm Password')).toBeTruthy();
+    expect(getByTestId('SignUpButton')).toBeTruthy();
+
+    let link = getByText("Already have an account? Login")
+    fireEvent.press(link)
+    expect(getByText("Don't have an account? Sign up")).toBeTruthy();
+  });
+
 });
