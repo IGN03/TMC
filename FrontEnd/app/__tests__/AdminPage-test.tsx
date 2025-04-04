@@ -43,4 +43,32 @@ describe('AdminPage', () => {
      
   });
 
+  
+  test('should render AdminPage placeholder text', () => {
+    // Render the HomeScreen component wrapped in the navigator
+    const { getByPlaceholderText, getByText } = render(
+      <NavigationContainer>
+      <AdminPage />
+      </NavigationContainer>);
+
+    let button = getByText("Manage Menu")
+
+    fireEvent.press(button)
+
+    button = getByText("Add New Menu")
+
+    fireEvent.press(button)
+    
+    expect(getByPlaceholderText("Name")).toBeTruthy();
+    
+    expect(getByPlaceholderText("Price")).toBeTruthy();
+    
+    expect(getByPlaceholderText("Allergen")).toBeTruthy();
+    
+    expect(getByPlaceholderText("Category")).toBeTruthy();
+    
+    expect(getByPlaceholderText("Description")).toBeTruthy();
+    
+  });
+
 });
