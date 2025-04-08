@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import LoginScreen from '@/app/(tabs)/login';
@@ -8,13 +8,22 @@ import { AuthProvider } from '../components/AuthContext';
 // Mock react-native-gesture-handler
 jest.mock('react-native-gesture-handler', () => {
   const ActualGestureHandler = jest.requireActual('react-native-gesture-handler');
+  const React = require('react');
+
   return {
     ...ActualGestureHandler,
-    GestureHandlerRootView: ({ children }) => <>{children}</>,
-    PanGestureHandler: ({ children }) => <>{children}</>,
-    TouchableOpacity: ({ children }) => <>{children}</>,
+    GestureHandlerRootView: React.forwardRef((props, ref) => (
+      <>{props.children}</>
+    )),
+    PanGestureHandler: React.forwardRef((props, ref) => (
+      <>{props.children}</>
+    )),
+    TouchableOpacity: React.forwardRef((props, ref) => (
+      <>{props.children}</>
+    )),
   };
 });
+
 
 describe('LoginScreen Component', () => {
   it('renders correctly', () => {
@@ -59,25 +68,25 @@ describe('LoginScreen Component', () => {
     fireEvent.press(loginButton)
     expect(getByText('Please fill out your password')).toBeTruthy();
     fireEvent.press(closeButton)
-
+      
     // no email but a password is entered
-    fireEvent.changeText(getByPlaceholderText('Email'), '');
-    fireEvent.changeText(getByPlaceholderText('Password'), 'password');
+      fireEvent.changeText(getByPlaceholderText('Email'), '');
+      fireEvent.changeText(getByPlaceholderText('Password'), 'password');
     fireEvent.press(loginButton)
     expect(getByText('Please fill out your email')).toBeTruthy();
     fireEvent.press(closeButton)
 
 
     // email is missing @
-    fireEvent.changeText(getByPlaceholderText('Email'), 'bob.com');
-    fireEvent.changeText(getByPlaceholderText('Password'), 'password');
+      fireEvent.changeText(getByPlaceholderText('Email'), 'bob.com');
+      fireEvent.changeText(getByPlaceholderText('Password'), 'password');
     fireEvent.press(loginButton)
     expect(getByText('Please fill out a valid email')).toBeTruthy();
     fireEvent.press(closeButton)
 
     // email is missing .
-    fireEvent.changeText(getByPlaceholderText('Email'), 'bob@bob');
-    fireEvent.changeText(getByPlaceholderText('Password'), 'password');
+      fireEvent.changeText(getByPlaceholderText('Email'), 'bob@bob');
+      fireEvent.changeText(getByPlaceholderText('Password'), 'password');
     fireEvent.press(loginButton)
     expect(getByText('Please fill out a valid email')).toBeTruthy();
     fireEvent.press(closeButton)
@@ -108,6 +117,81 @@ describe('LoginScreen Component', () => {
     let link = getByText("Already have an account? Login")
     fireEvent.press(link)
     expect(getByText("Don't have an account? Sign up")).toBeTruthy();
+  });
+
+
+  it('test empty signup fields show the correct response', async () => {
+    const { getByPlaceholderText, getByTestId, getByText, queryByText } = render(
+      <AuthProvider>
+        <GestureHandlerRootView>
+          <NavigationContainer>
+            <LoginScreen />
+          </NavigationContainer>
+        </GestureHandlerRootView>
+      </AuthProvider>
+    );
+  
+    fireEvent.press(getByText("Don't have an account? Sign up"));
+  
+    const signupButton = getByTestId('SignUpButton');
+  
+    // test all fields are empty
+    fireEvent.press(signupButton);
+    await waitFor(() => expect(getByText("Please fill out all fields")).toBeTruthy());
+    fireEvent.press(getByText("Close"));
+  
+    // no email entered but a password is entered
+    fireEvent.changeText(getByPlaceholderText('Password'), 'password');
+    fireEvent.press(signupButton);
+    await waitFor(() => expect(getByText("Please fill out your email")).toBeTruthy());
+    fireEvent.press(getByText("Close"));
+  
+    // email entered but no password
+    fireEvent.changeText(getByPlaceholderText('Email'), 'Bob@bob.com');
+    fireEvent.changeText(getByPlaceholderText('Password'), '');
+    fireEvent.press(signupButton);
+    await waitFor(() => expect(getByText("Please fill out your password")).toBeTruthy());
+    fireEvent.press(getByText("Close"));
+  
+    // no @ in email
+    fireEvent.changeText(getByPlaceholderText('Email'), 'bob.com');
+    fireEvent.changeText(getByPlaceholderText('Password'), 'password');
+    fireEvent.press(signupButton);
+    await waitFor(() => expect(getByText("Please fill out a valid email")).toBeTruthy());
+    fireEvent.press(getByText("Close"));
+  
+    // no . in email
+    fireEvent.changeText(getByPlaceholderText('Email'), 'bob@bob');
+    fireEvent.changeText(getByPlaceholderText('Password'), 'password');
+    fireEvent.press(signupButton);
+    await waitFor(() => expect(getByText("Please fill out a valid email")).toBeTruthy());
+    fireEvent.press(getByText("Close"));
+  
+    // invalid password length
+    fireEvent.changeText(getByPlaceholderText('Email'), 'bob@bob.com');
+    fireEvent.changeText(getByPlaceholderText('Password'), 'pass');
+    fireEvent.press(signupButton);
+    await waitFor(() =>
+      expect(getByText("Please fill out a Password that is at least 8 characters long")).toBeTruthy()
+    );
+    fireEvent.press(getByText("Close"));
+  
+    // all lowercase password
+    fireEvent.changeText(getByPlaceholderText('Email'), 'bob@bob.com');
+    fireEvent.changeText(getByPlaceholderText('Password'), 'password');
+    fireEvent.press(signupButton);
+    await waitFor(() =>
+      expect(
+        getByText(
+          "A Password should contain at least: both a lowercase and an uppercase letters, a number and a special character(#$%&*) "
+        )
+      ).toBeTruthy()
+    );
+    fireEvent.press(getByText("Close"));
+  
+    // Navigate back to login
+    fireEvent.press(getByText("Already have an account? Login"));
+    await waitFor(() => expect(getByText("Don't have an account? Sign up")).toBeTruthy());
   });
 
 });
