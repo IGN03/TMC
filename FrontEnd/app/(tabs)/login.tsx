@@ -295,7 +295,7 @@ const SignUpScreen = ({ navigation }) => {
           secureTextEntry
         />
         
-        <Button title="Sign Up" onPress={handleSignUp} color={colors.buttonColor} />
+        <Button title="Sign Up" onPress={handleSignUp} color={colors.buttonColor} testID="SignUpButton"/>
 
         {/* Back to Login Text */}
         <TouchableOpacity onPress={() => navigation.navigate('Login')}>
