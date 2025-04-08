@@ -1,7 +1,6 @@
 //import { MenuItem, Order, Account, PickupLocation } from './models.js';
 const { MenuItem, Order, Account, PickupLocation } = require("./models.js")
 const { MongoClient, ServerApiVersion, ObjectId  } = require("mongodb");
-const { SquareClient } = require("square");
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
