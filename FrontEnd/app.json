@@ -13,13 +13,15 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tmcrcos.FrontEnd"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.tmcrcos.FrontEnd"
     },
     "web": {
       "bundler": "metro",
@@ -28,7 +30,14 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.yourapp",
+          "publishableKey": "pk_live_51R9BO5LAudv59E8t0dYdSeCU7NSYasJGNMJlFhpmxGdv2RzfJFCkzG7vB1bbeRHYg5q4ysnNHNV7XMHhZcTbSZ7k00dxHrGNkX"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
