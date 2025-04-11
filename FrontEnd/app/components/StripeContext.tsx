@@ -1,14 +1,11 @@
 import * as Linking from "expo-linking";
+import React from 'react';
+import { Platform } from 'react-native';
 
 import { StripeProvider } from "@stripe/stripe-react-native";
 import Constants from "expo-constants";
 
-const STRIPE_PUBLISHABLE_KEY = 'pk_live_51R9BO5LAudv59E8t0dYdSeCU7NSYasJGNMJlFhpmxGdv2RzfJFCkzG7vB1bbeRHYg5q4ysnNHNV7XMHhZcTbSZ7k00dxHrGNkX';
-
-
-if (!merchantId) {
-  throw new Error('Missing Expo config for "@stripe/stripe-react-native"');
-}
+const STRIPE_PUBLISHABLE_KEY = 'pk_test_51R9BO5LAudv59E8tmCxkgf6J12J6KzlC9eoZj25eLVLKQphZ3eKeavHdtfMQNc0uF9OqQiOi1DGnk1uqwkQWcgqb00jyrA5FNz';
 
 export default function ExpoStripeProvider(
   props: Omit<
@@ -19,7 +16,7 @@ export default function ExpoStripeProvider(
   return (
     <StripeProvider
       publishableKey={STRIPE_PUBLISHABLE_KEY}
-      urlScheme={Linking.createURL("/").split(":")[0]}
+      urlScheme={Linking.createURL("/")?.split(":")[0]}
       {...props}
     />
   );

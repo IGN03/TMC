@@ -21,7 +21,7 @@ export default function RootLayout() {
   });
 
   // Replace with your Stripe publishable key
-  const STRIPE_PUBLISHABLE_KEY = 'pk_live_51R9BO5LAudv59E8t0dYdSeCU7NSYasJGNMJlFhpmxGdv2RzfJFCkzG7vB1bbeRHYg5q4ysnNHNV7XMHhZcTbSZ7k00dxHrGNkX';
+  const STRIPE_PUBLISHABLE_KEY = 'pk_test_51R9BO5LAudv59E8tmCxkgf6J12J6KzlC9eoZj25eLVLKQphZ3eKeavHdtfMQNc0uF9OqQiOi1DGnk1uqwkQWcgqb00jyrA5FNz';
 
   useEffect(() => {
     if (loaded) {
@@ -35,7 +35,9 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <StripeProvider>
+      <StripeProvider
+        STRIPE_PUBLISHABLE_KEY
+      >
         <CartProvider>
           <AuthProvider>      
             <Stack>

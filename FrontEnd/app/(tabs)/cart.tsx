@@ -22,6 +22,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
 import { CartProvider } from '../components/CartContext';
 import { useCart } from '../components/CartContext';
+import { useStripe } from '@stripe/stripe-react-native';
 
 const BACKEND_URL = 'https://tmc-85hb.onrender.com';
 
@@ -52,6 +53,8 @@ const PaymentButton = ({
 
 // Cart Screen Component
 function CartScreen() {
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
+  const [stripeLoading, setStripeLoading] = useState(false);
   const [menuItems, setMenuItems] = useState([]);
       // Calculate cart total
       const { cartItems, removeFromCart } = useCart();
@@ -153,54 +156,142 @@ function CartScreen() {
   const openSidebar = () => setIsSidebarVisible(true);
   const closeSidebar = () => setIsSidebarVisible(false);
 
-  async function handlePayment() {
+  const fetchPaymentSheetParams = async (amount: number) => {
+  try {
+    const amount = Math.round(total * 100); // Convert to cents
+    console.log(`Fetching payment sheet for amount: ${amount} cents`);
+    
+    const response = await fetch(`${BACKEND_URL}/payment-sheet`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        amount: amount
+      }),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Server response error:', errorText);
+      throw new Error('Network response was not ok');
+    }
+    
+    const data = await response.json();
+    console.log('Payment sheet params received:', Object.keys(data).join(', '));
+    
+    if (!data.paymentIntent) {
+      throw new Error('No payment intent received from server');
+    }
+    
+    return {
+      paymentIntent: data.paymentIntent,
+      ephemeralKey: data.ephemeralKey,
+      customer: data.customer,
+    };
+  } catch (error) {
+    console.error('Error fetching payment sheet params:', error);
+    throw error;
+  }
+};
+
+  const initializePaymentSheet = async () => {
     try {
-      const response = await fetch('http://localhost:3000/orderFromCart', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: 10000, // Amount in cents
-          name: 'Order Payment'
-        })
+      setStripeLoading(true);
+      
+      const {
+        paymentIntent,
+        ephemeralKey,
+        customer,
+      } = await fetchPaymentSheetParams(total);
+
+      const { error } = await initPaymentSheet({
+        merchantDisplayName: "The Munch Club",
+        customerId: customer,
+        customerEphemeralKeySecret: ephemeralKey,
+        paymentIntentClientSecret: paymentIntent,
+        allowsDelayedPaymentMethods: true,
+        defaultBillingDetails: {
+          name: 'Customer',
+        }
       });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create payment link');
-      }
-  
-      const data = await response.json();
-      console.log('Payment link created:', data);
-  
-      // Create a clickable link element
-      const paymentLink = document.createElement('a');
-      paymentLink.href = data.paymentUrl;
-      paymentLink.textContent = 'Proceed to Payment';
-      paymentLink.className = 'payment-link';
-      paymentLink.target = '_blank'; // Open in new tab
-      paymentLink.rel = 'noopener noreferrer'; // Security best practice
-  
-      // Optional: Append to a specific container or replace existing content
-      const paymentContainer = document.getElementById('payment-container');
-      if (paymentContainer) {
-        paymentContainer.innerHTML = ''; 
-        paymentContainer.appendChild(paymentLink);
+
+      if (error) {
+        console.log('Error initializing payment sheet:', error);
+        Alert.alert('Error', error.message || 'Unable to initialize payment');
       } else {
-        // Fallback to direct navigation if no container found
-        window.location.href = data.paymentUrl;
+        setStripeLoading(false);
       }
     } catch (error) {
-      console.error('Error during payment process:', error);
-      const errorContainer = document.getElementById('error-container');
-      if (errorContainer) {
-        errorContainer.textContent = `Payment Error: ${error.message}`;
-        errorContainer.style.color = 'red';
-      }
-      throw error;
+      console.error('Error in initializePaymentSheet:', error);
+    } finally {
+      setStripeLoading(false);
     }
+  };
+
+  // Replace your handlePayment function with this one
+  const handlePayment = async () => {
+  try {
+    // Show loading indicator
+    setStripeLoading(true);
+    
+    // Step 1: Fetch payment sheet params from your server
+    const {
+      paymentIntent,
+      ephemeralKey,
+      customer,
+    } = await fetchPaymentSheetParams();
+    
+    console.log("Got payment intent:", paymentIntent ? "Yes" : "No");
+    
+    // Step 2: Initialize the payment sheet
+    const { error: initError } = await initPaymentSheet({
+      merchantDisplayName: "The Munch Club",
+      customerId: customer,
+      customerEphemeralKeySecret: ephemeralKey,
+      paymentIntentClientSecret: paymentIntent,
+      allowsDelayedPaymentMethods: true,
+      defaultBillingDetails: {
+        name: 'Customer',
+      }
+    });
+    
+    if (initError) {
+      console.log('Payment sheet initialization error:', initError);
+      Alert.alert('Error', initError.message || 'Unable to initialize payment');
+      setStripeLoading(false);
+      return;
+    }
+    
+    console.log("Payment sheet initialized successfully");
+    
+    // Step 3: Present the payment sheet only after successful initialization
+    const { error: presentError } = await presentPaymentSheet();
+    
+    if (presentError) {
+      console.log(`Payment sheet presentation error: ${presentError.code}`, presentError.message);
+      
+      if (presentError.code === 'Canceled') {
+        Alert.alert('Payment Canceled', 'You canceled the payment process');
+      } else {
+        Alert.alert('Payment Error', presentError.message || 'Something went wrong');
+      }
+    } else {
+      console.log('Payment successful!');
+      setSelectedPaymentMethod('Credit Card');
+      setIsPaymentMethodModalVisible(false);
+      setIsPaymentConfirmationModalVisible(true);
+      
+      // You might want to clear the cart here
+      // clearCart();
+    }
+  } catch (error) {
+    console.error('Payment process error:', error);
+    Alert.alert('Payment Error', error.message || 'Unable to complete payment. Please try again.');
+  } finally {
+    setStripeLoading(false);
   }
+};
 
   // Sidebar component in MenuScreen
   const Sidebar = ({ isVisible, onClose }) => 
@@ -320,25 +411,10 @@ function CartScreen() {
           />
         }>
         <ThemedView style={styles.titleContainer}>
-          <ThemedText type="title">Payment Options</ThemedText>
+          <ThemedText type="title">Payment Option(s)</ThemedText>
         </ThemedView>
         <ThemedView style={styles.stepContainer}>
-          <ThemedText type="subtitle">1. Apple Pay</ThemedText>
-          <Image
-            source={require('@/assets/images/applepaylogo.png')}
-            style={styles.invertedapplePayLogo}
-          />
-          <ThemedText type="subtitle">2. Google Pay</ThemedText>
-          <Image
-            source={require('@/assets/images/googlepaylogo.svg.png')}
-            style={styles.googlePayLogo}
-          />
-          <ThemedText type="subtitle">3. Venmo</ThemedText>
-          <Image
-            source={require('@/assets/images/Venmo_logo.png')}
-            style={styles.venmoLogo}
-          />
-          <ThemedText type="subtitle">4. Credit Card/Debit Card</ThemedText>
+          <ThemedText type="subtitle">1. Credit Card/Debit Card</ThemedText>
           <Image
             source={require('@/assets/images/6963703.png')}
             style={styles.creditCardLogo} 
@@ -398,33 +474,6 @@ function CartScreen() {
             <View style={styles.paymentButtonsContainer}>
               <PaymentButton
                 onPress={() => {
-                  setSelectedPaymentMethod('Apple Pay');
-                  console.log('Apple Pay selected');
-                }}
-                logo={require('@/assets/images/applepaylogo.png')}
-                style={styles.applePayButton}
-                testID="apple-pay-button"
-              />
-              <PaymentButton
-                onPress={() => {
-                  setSelectedPaymentMethod('Google Pay');
-                  console.log('Google Pay selected');
-                }}
-                logo={require('@/assets/images/googlepaylogo.svg.png')}
-                style={styles.googlePayButton}
-                testID="google-pay-button"
-              />
-              <PaymentButton
-                onPress={() => {
-                  setSelectedPaymentMethod('Venmo');
-                  console.log('Venmo selected');
-                }}
-                logo={require('@/assets/images/Venmo_logo.png')}
-                style={styles.venmoButton}
-                testID="venmo-button"
-              />
-              <PaymentButton
-                onPress={() => {
                   setSelectedPaymentMethod('Credit Card');
                   console.log('Credit Card selected');
                 }}
@@ -447,12 +496,14 @@ function CartScreen() {
               style={[
                 styles.touchableButton, 
                 styles.payButton1,
-                !selectedPaymentMethod && { opacity: 0.5 }
+                (!selectedPaymentMethod || stripeLoading) && { opacity: 0.5 }
               ]}
               onPress={handlePayment}
-              disabled={!selectedPaymentMethod}
+              disabled={stripeLoading || !selectedPaymentMethod}
             >
-              <Text style={styles.buttonText1}>Complete Payment</Text>
+              <Text style={styles.buttonText1}>
+                {stripeLoading ? 'Processing...' : 'Complete Payment'}
+              </Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
@@ -543,22 +594,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 20,
   },
-  invertedapplePayLogo: {
-    height: 75,
-    width: 75,
-    tintColor: 'red',
-    resizeMode: 'contain',
-  },
-  googlePayLogo: {
-    height: 75,
-    width: 75,
-    resizeMode: 'contain',
-  },
-  venmoLogo: {
-    height: 75,
-    width: 75,
-    resizeMode: 'contain',
-  },
   creditCardLogo: {
     height: 75,
     width: 75,
@@ -640,18 +675,6 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontSize: 16,
     fontWeight: '600',
-  },
-
-  applePayButton: {
-    backgroundColor: 'red',
-  },
-
-  googlePayButton: {
-    backgroundColor: '#fff',
-  },
-
-  venmoButton: {
-    backgroundColor: '#008CFF',
   },
 
   creditCardButton: {
