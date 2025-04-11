@@ -5,7 +5,6 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const express = require('express');
-const { v4: uuidv4 } = require('uuid');
 // Add Stripe integration
 const stripe = require('stripe')('sk_test_51R9BO5LAudv59E8tZcgoSeMShudqxMe79qGw70zvrTxxj3mchXjGWL6CVT9yCrLq7NXZ21YIHDJCiRsnxE3Xp1vX00L14wbA1s');
 
@@ -17,8 +16,8 @@ app.use(express.json());
 // TODO set up secrets for connection string
 
 const uri = process.env.ATLAS_URI;
-const client = new SquareClient({ token:  'EAAAl7bENyO2IwLTbpGL89p7qWt6p1A6C6AXjph8GtfoeYievQUUrespkltM-hh3'});
-const mongoClient = new MongoClient(uri, {
+
+const client = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
         strict: true,
@@ -34,7 +33,7 @@ if (!database) {
 }
 
 // get to mongo connection
-const myDB = mongoClient.db(database);
+const myDB = client.db(database);
 const menuItems = myDB.collection("menuItems");
 const orders = myDB.collection("orders");
 const accounts = myDB.collection("accounts");
@@ -507,76 +506,16 @@ app.post('/orderFromCart', async(req, res) => {
 
 })
 
-async function createPayment(amount, sourceId, customerId, locationId, referenceId, note = "Brief description"){
-    if (!amount || amount <= 0) {
-        throw new Error('Invalid payment amount');
-    }
-    try {
-        const response = await client.payments.create({
-            sourceId: sourceId,  // Use parameter instead of hardcoded value
-            idempotencyKey: uuidv4(),
-            amountMoney: {
-                amount: BigInt(amount),  // Convert to BigInt for consistency
-                currency: "USD",
-            },
-            appFeeMoney: {
-                amount: BigInt(10),
-                currency: "USD",
-            },
-            autocomplete: true,
-            customerId: customerId,  // Use parameter instead of hardcoded value
-            locationId: locationId,  // Use parameter instead of hardcoded value
-            referenceId: referenceId,  // Use parameter instead of hardcoded value
-            note: note,  // Use parameter instead of hardcoded value
-        });
-        return response;
-    }
-    catch (error) {
-        console.error('Payment creation failed:', error);
-        throw error; // or handle appropriately
-      }
-}
-
-app.post('/api/payments', async (req, res) => {
-    try {
-      const { amount, sourceId, customerId, locationId, referenceId, note } = req.body;
-      
-      // Validate required fields
-      if (!amount || !sourceId || !locationId) {
-        return res.status(400).json({ 
-          success: false, 
-          error: 'Missing required parameters' 
-        });
-      }
-      
-      const paymentResult = await createPayment(
-        amount, 
-        sourceId, 
-        customerId, 
-        locationId, 
-        referenceId, 
-        note
-      );
-      
-      res.status(200).json({
-        success: true,
-        paymentId: paymentResult.result.payment.id,
-        status: paymentResult.result.payment.status,
-        amount: paymentResult.result.payment.amountMoney,
-        receiptUrl: paymentResult.result.payment.receiptUrl
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: error.message || 'Payment processing failed'
-      });
-    }
-});
-
 // Add Stripe payment-sheet endpoint
 app.post('/payment-sheet', async (req, res) => {
+    const { amount } = req.body;
+    if (!amount || isNaN(amount) || amount <= 0) {
+        return res.status(400).json({
+            success: false,
+            error: 'Valid amount is required'
+        });
+    }
     try {
-        // Use an existing Customer ID if this is a returning customer.
         const customer = await stripe.customers.create();
         
         const ephemeralKey = await stripe.ephemeralKeys.create(
@@ -585,11 +524,9 @@ app.post('/payment-sheet', async (req, res) => {
         );
         
         const paymentIntent = await stripe.paymentIntents.create({
-            amount: 1099,
-            currency: 'eur',
+            amount: parseInt(amount),
+            currency: 'usd',
             customer: customer.id,
-            // In the latest version of the API, specifying the `automatic_payment_methods` parameter
-            // is optional because Stripe enables its functionality by default.
             automatic_payment_methods: {
                 enabled: true,
             },
