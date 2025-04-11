@@ -206,7 +206,7 @@ function CartScreen() {
       } = await fetchPaymentSheetParams(total);
 
       const { error } = await initPaymentSheet({
-        merchantDisplayName: "The Munch Club",
+        merchantDisplayName: "Thunder Mountain Curry",
         customerId: customer,
         customerEphemeralKeySecret: ephemeralKey,
         paymentIntentClientSecret: paymentIntent,
