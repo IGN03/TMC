@@ -17,7 +17,6 @@ app.use(express.json());
 // TODO set up secrets for connection string
 
 const uri = process.env.ATLAS_URI;
-const client = new SquareClient({ token:  'EAAAl7bENyO2IwLTbpGL89p7qWt6p1A6C6AXjph8GtfoeYievQUUrespkltM-hh3'});
 const mongoClient = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
