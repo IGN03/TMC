@@ -194,4 +194,42 @@ describe('LoginScreen Component', () => {
     await waitFor(() => expect(getByText("Don't have an account? Sign up")).toBeTruthy());
   });
 
+
+  it('brings you to your profile when you log in', async () => {
+    const { getByText, getByTestId, getByPlaceholderText } = render(
+      <AuthProvider>
+        <GestureHandlerRootView> {/* Wrap test in GestureHandlerRootView */}
+          <NavigationContainer>
+            <LoginScreen />
+          </NavigationContainer>
+        </GestureHandlerRootView>
+      </AuthProvider>
+    );
+
+    let loginButton = getByTestId('LoginButton')
+    let email = "theTester@test.com"
+    let password = "12345"
+    // email is missing @
+    fireEvent.changeText(getByPlaceholderText('Email'), email);
+    fireEvent.changeText(getByPlaceholderText('Password'), password);
+    fireEvent.press(loginButton)
+    await waitFor(() =>
+      expect(getByText("Profile")).toBeTruthy()
+    );
+    await waitFor(() =>
+      expect(getByPlaceholderText("Name")).toBeTruthy()
+    );
+    await waitFor(() =>
+      expect(getByPlaceholderText("Phone Number")).toBeTruthy()
+    );
+    //expect(getByText("the tester")).toBeTruthy()
+    //expect(getByText("122-333-4444")).toBeTruthy()
+    expect(getByText("Save Changes")).toBeTruthy()
+    fireEvent.press(getByText("Logout"))
+    await waitFor(() =>
+      expect(getByPlaceholderText("Email")).toBeTruthy()
+    );
+
+  });
+
 });
