@@ -246,7 +246,7 @@ function CartScreen() {
     
     // Step 2: Initialize the payment sheet
     const { error: initError } = await initPaymentSheet({
-      merchantDisplayName: "The Munch Club",
+      merchantDisplayName: "Thunder Mountain Curry",
       customerId: customer,
       customerEphemeralKeySecret: ephemeralKey,
       paymentIntentClientSecret: paymentIntent,
