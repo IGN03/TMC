@@ -5,6 +5,8 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const express = require('express');
+// Add Stripe integration
+const stripe = require('stripe')('sk_test_51R9BO5LAudv59E8tZcgoSeMShudqxMe79qGw70zvrTxxj3mchXjGWL6CVT9yCrLq7NXZ21YIHDJCiRsnxE3Xp1vX00L14wbA1s');
 
 const app = express();
 
@@ -504,6 +506,46 @@ app.post('/orderFromCart', async(req, res) => {
 
 })
 
+// Add Stripe payment-sheet endpoint
+app.post('/payment-sheet', async (req, res) => {
+    const { amount } = req.body;
+    if (!amount || isNaN(amount) || amount <= 0) {
+        return res.status(400).json({
+            success: false,
+            error: 'Valid amount is required'
+        });
+    }
+    try {
+        const customer = await stripe.customers.create();
+        
+        const ephemeralKey = await stripe.ephemeralKeys.create(
+            {customer: customer.id},
+            {apiVersion: '2025-02-24.acacia'}
+        );
+        
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: parseInt(amount),
+            currency: 'usd',
+            customer: customer.id,
+            automatic_payment_methods: {
+                enabled: true,
+            },
+        });
+        
+        res.json({
+            paymentIntent: paymentIntent.client_secret,
+            ephemeralKey: ephemeralKey.secret,
+            customer: customer.id,
+            publishableKey: 'pk_test_51R9BO5LAudv59E8tmCxkgf6J12J6KzlC9eoZj25eLVLKQphZ3eKeavHdtfMQNc0uF9OqQiOi1DGnk1uqwkQWcgqb00jyrA5FNz'
+        });
+    } catch (error) {
+        console.error('Stripe payment sheet creation failed:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Payment sheet creation failed'
+        });
+    }
+});
 
 app.listen(3000, () => {
     console.log('Server is running on port 3000');

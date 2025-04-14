@@ -1,0 +1,241 @@
+{
+  "totalDependencies": 47,
+  "analyzedAt": "2025-04-08T20:37:02.512Z",
+  "dependencies": [
+    {
+      "name": "@expo/vector-icons",
+      "version": "^14.0.2",
+      "dependedBy": []
+    },
+    {
+      "name": "@react-native-async-storage/async-storage",
+      "version": "^2.1.2",
+      "dependedBy": []
+    },
+    {
+      "name": "@react-navigation/native",
+      "version": "^7.0.0",
+      "dependedBy": []
+    },
+    {
+      "name": "@react-navigation/native-stack",
+      "version": "^7.2.0",
+      "dependedBy": []
+    },
+    {
+      "name": "@react-navigation/stack",
+      "version": "^7.1.1",
+      "dependedBy": []
+    },
+    {
+      "name": "@stripe/react-stripe-js",
+      "version": "^2.8.0",
+      "dependedBy": []
+    },
+    {
+      "name": "@stripe/stripe-js",
+      "version": "^4.4.0",
+      "dependedBy": []
+    },
+    {
+      "name": "@stripe/stripe-react-native",
+      "version": "^0.38.6",
+      "dependedBy": []
+    },
+    {
+      "name": "@testing-library/react-native",
+      "version": "^13.0.1",
+      "dependedBy": []
+    },
+    {
+      "name": "axios",
+      "version": "^1.8.4",
+      "dependedBy": []
+    },
+    {
+      "name": "cheerio",
+      "version": "^1.0.0",
+      "dependedBy": []
+    },
+    {
+      "name": "expo",
+      "version": "^52.0.16",
+      "dependedBy": []
+    },
+    {
+      "name": "expo-blur",
+      "version": "~14.0.3",
+      "dependedBy": []
+    },
+    {
+      "name": "expo-constants",
+      "version": "~17.0.3",
+      "dependedBy": []
+    },
+    {
+      "name": "expo-font",
+      "version": "~13.0.1",
+      "dependedBy": []
+    },
+    {
+      "name": "expo-haptics",
+      "version": "~14.0.1",
+      "dependedBy": []
+    },
+    {
+      "name": "expo-linking",
+      "version": "~7.0.3",
+      "dependedBy": []
+    },
+    {
+      "name": "expo-router",
+      "version": "~4.0.11",
+      "dependedBy": []
+    },
+    {
+      "name": "expo-splash-screen",
+      "version": "~0.29.11",
+      "dependedBy": []
+    },
+    {
+      "name": "expo-status-bar",
+      "version": "~2.0.0",
+      "dependedBy": []
+    },
+    {
+      "name": "expo-symbols",
+      "version": "~0.2.2",
+      "dependedBy": []
+    },
+    {
+      "name": "expo-system-ui",
+      "version": "~4.0.3",
+      "dependedBy": []
+    },
+    {
+      "name": "expo-web-browser",
+      "version": "~14.0.1",
+      "dependedBy": []
+    },
+    {
+      "name": "ora",
+      "version": "^8.2.0",
+      "dependedBy": []
+    },
+    {
+      "name": "react",
+      "version": "18.3.1",
+      "dependedBy": []
+    },
+    {
+      "name": "react-dom",
+      "version": "18.3.1",
+      "dependedBy": []
+    },
+    {
+      "name": "react-native",
+      "version": "0.76.2",
+      "dependedBy": []
+    },
+    {
+      "name": "react-native-fs",
+      "version": "^2.20.0",
+      "dependedBy": []
+    },
+    {
+      "name": "react-native-gesture-handler",
+      "version": "~2.20.2",
+      "dependedBy": []
+    },
+    {
+      "name": "react-native-modal",
+      "version": "^13.0.1",
+      "dependedBy": []
+    },
+    {
+      "name": "react-native-reanimated",
+      "version": "~3.16.1",
+      "dependedBy": []
+    },
+    {
+      "name": "react-native-safe-area-context",
+      "version": "4.12.0",
+      "dependedBy": []
+    },
+    {
+      "name": "react-native-screens",
+      "version": "~4.1.0",
+      "dependedBy": []
+    },
+    {
+      "name": "react-native-web",
+      "version": "~0.19.10",
+      "dependedBy": []
+    },
+    {
+      "name": "react-native-webview",
+      "version": "13.12.5",
+      "dependedBy": []
+    },
+    {
+      "name": "stripe",
+      "version": "^16.11.0",
+      "dependedBy": []
+    },
+    {
+      "name": "@babel/core",
+      "version": "^7.25.2",
+      "dependedBy": []
+    },
+    {
+      "name": "@types/jest",
+      "version": "^29.5.14",
+      "dependedBy": []
+    },
+    {
+      "name": "@types/react",
+      "version": "~18.3.12",
+      "dependedBy": []
+    },
+    {
+      "name": "@types/react-test-renderer",
+      "version": "^18.3.0",
+      "dependedBy": []
+    },
+    {
+      "name": "eslint",
+      "version": "^9.13.0",
+      "dependedBy": []
+    },
+    {
+      "name": "eslint-config-prettier",
+      "version": "^9.1.0",
+      "dependedBy": []
+    },
+    {
+      "name": "jest",
+      "version": "^29.2.1",
+      "dependedBy": []
+    },
+    {
+      "name": "jest-expo",
+      "version": "~52.0.3",
+      "dependedBy": []
+    },
+    {
+      "name": "prettier",
+      "version": "^3.3.3",
+      "dependedBy": []
+    },
+    {
+      "name": "react-test-renderer",
+      "version": "18.3.1",
+      "dependedBy": []
+    },
+    {
+      "name": "typescript",
+      "version": "~5.3.3",
+      "dependedBy": []
+    }
+  ]
+}
